@@ -40,15 +40,18 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
-- [ ] Front-end do portal (👤 Front) e integração com a API
+- [x] Esqueleto do front em `frontend/` (Vite + React; cotação e pedido) — 👤 Front evolui conforme o Figma
+- [ ] 👤 Front: telas de SAC, sinistro, rastreamento, avaliação e login (Supabase Auth)
+- [ ] 👤 Deploy do front no Cloudflare Pages (build: `npm run build`, diretório `frontend`, saída `dist`, var `VITE_API_URL`)
 
 ## Fase 4 — Observabilidade, segurança, carga (Encontros 11–14)
-- [ ] OpenTelemetry (traces → Jaeger) — docs/10_observability.md
-- [ ] Dashboard Grafana (geral + clientes, tickets, sinistros, SLA, satisfação)
+- [x] OpenTelemetry (traces → Jaeger) — docs/10_observability.md (👤 conferir traces no Jaeger com Docker)
+- [x] Dashboard Grafana (geral + domínio) provisionado automaticamente — 👤 conferir visualmente com Docker
 - [ ] 👤 SonarCloud: criar projeto e secret SONAR_TOKEN; ativar job no CI
 - [ ] Trivy bloqueante (exit-code 1)
-- [ ] Teste de carga K6 (100/500/1000 req/s) — docs/13_load_test.md
-- [ ] docs/12_atam.md (4 cenários)
+- [x] Script K6 pronto (tests/load/k6.js)
+- [ ] 👤 Executar K6 e preencher resultados em docs/13_load_test.md
+- [x] docs/12_atam.md (4 cenários)
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)

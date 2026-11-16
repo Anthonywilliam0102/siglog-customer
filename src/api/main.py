@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
+    REGISTRY,
     Counter,
     Gauge,
     Histogram,
@@ -19,6 +20,9 @@ from prometheus_client import (
 from src.api.routes import router
 from src.config.settings import settings
 from src.domain.errors import DomainError
+from src.infrastructure.db import SessionLocal, engine
+from src.infrastructure.domain_metrics import DomainCollector
+from src.infrastructure.telemetry import setup_tracing
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger(settings.service_name)
@@ -36,6 +40,8 @@ app = FastAPI(
 
 
 app.include_router(router)
+setup_tracing(app, engine)
+REGISTRY.register(DomainCollector(SessionLocal))
 
 
 @app.exception_handler(DomainError)

@@ -10,6 +10,7 @@ import logging
 from collections.abc import Awaitable, Callable
 
 import aio_pika
+from prometheus_client import Counter, start_http_server
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,6 +20,7 @@ from src.infrastructure.db import SessionLocal
 from src.infrastructure.models import OutboxEvent
 
 log = logging.getLogger("outbox")
+MESSAGES_PUBLISHED = Counter("messages_processed_total", "Mensagens publicadas no broker", ["routing_key"])
 Publish = Callable[[str, dict], Awaitable[None]]
 
 
@@ -28,12 +30,14 @@ async def publish_pending(session: Session, publish: Publish, batch: int = 50) -
         .order_by(OutboxEvent.created_at).limit(batch).with_for_update(skip_locked=True)))
     for row in rows:
         await publish(row.routing_key, row.payload)
+        MESSAGES_PUBLISHED.labels(row.routing_key).inc()
         row.published_at = utcnow()
     session.commit()
     return len(rows)
 
 
 async def main() -> None:
+    start_http_server(settings.worker_metrics_port)
     connection = await aio_pika.connect_robust(settings.rabbitmq_url)
     async with connection:
         channel = await connection.channel()

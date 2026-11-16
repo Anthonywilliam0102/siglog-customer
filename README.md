@@ -15,6 +15,7 @@ docker compose up -d --build
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3000 |
 | Jaeger | http://localhost:16686 |
+| Portal (dev) | http://localhost:5173 |
 
 ## Testar a API localmente
 ```bash
@@ -24,6 +25,11 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/docs
 ```
 O Compose sobe também `migrate` (Alembic) e `worker` (publica eventos do Outbox no RabbitMQ).
 Contrato: [openapi.yaml](openapi.yaml) · Eventos: [docs/08_events.md](docs/08_events.md)
+
+## Front-end (`frontend/`)
+```bash
+cd frontend && npm install && npm run dev   # http://localhost:5173 (proxy /api -> :8000)
+```
 
 ## Desenvolvimento
 ```bash

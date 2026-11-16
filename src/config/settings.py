@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     jwt_secret: str = ""
     tracking_base_url: str = ""
     events_exchange: str = "siglog.events"
+    otel_exporter_otlp_endpoint: str = ""  # vazio = tracing desligado
+    worker_metrics_port: int = 9100
 
 
 settings = Settings()
