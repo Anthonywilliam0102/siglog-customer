@@ -27,11 +27,10 @@ jobs:
       - name: Docker build
         run: docker build -t siglog-customer:ci .
       - name: Trivy scan (imagem)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: siglog-customer:ci
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: "0"   # troque para "1" quando o time quiser bloquear o pipeline
+        # Container oficial do Trivy (evita depender de versão/tag de action).
+        # Troque --exit-code para 1 quando o time quiser bloquear o pipeline em CRITICAL/HIGH.
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
+            image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 siglog-customer:ci
 
   # SonarCloud: ativar depois de criar o projeto e o secret SONAR_TOKEN (ver docs/00_checklist.md)
