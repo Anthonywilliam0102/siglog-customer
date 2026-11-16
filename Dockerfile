@@ -5,6 +5,8 @@ RUN useradd --create-home --uid 10001 app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src ./src
+COPY alembic.ini ./
+COPY migrations ./migrations
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 \

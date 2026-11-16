@@ -7,6 +7,7 @@ import logging
 import time
 
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     Counter,
@@ -15,7 +16,9 @@ from prometheus_client import (
     generate_latest,
 )
 
+from src.api.routes import router
 from src.config.settings import settings
+from src.domain.errors import DomainError
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger(settings.service_name)
@@ -30,6 +33,15 @@ app = FastAPI(
     description="CRM, SAC & Portal do Cliente — Squad 06",
     version="0.1.0",
 )
+
+
+app.include_router(router)
+
+
+@app.exception_handler(DomainError)
+async def domain_error_handler(request: Request, exc: DomainError):
+    log_event("domain_error", level="WARNING", path=request.url.path, detail=exc.message)
+    return JSONResponse(status_code=exc.status, content={"detail": exc.message})
 
 
 def log_event(event: str, level: str = "INFO", **extra) -> None:

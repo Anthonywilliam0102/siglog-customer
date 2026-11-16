@@ -9,12 +9,21 @@ docker compose up -d --build
 ```
 | Serviço | URL |
 |---|---|
-| API (docs Swagger) | http://localhost:8000/docs |
+| API (Swagger)  | http://localhost:8000/docs |
 | Health / Métricas | http://localhost:8000/health · /metrics |
 | RabbitMQ (UI) | http://localhost:15672 |
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3000 |
 | Jaeger | http://localhost:16686 |
+
+## Testar a API localmente
+```bash
+export JWT_SECRET=$(grep JWT_SECRET .env | cut -d= -f2)
+TOKEN=$(python scripts/gen_token.py meu-usuario cliente)   # perfis: cliente | atendente | gestor
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/docs
+```
+O Compose sobe também `migrate` (Alembic) e `worker` (publica eventos do Outbox no RabbitMQ).
+Contrato: [openapi.yaml](openapi.yaml) · Eventos: [docs/08_events.md](docs/08_events.md)
 
 ## Desenvolvimento
 ```bash

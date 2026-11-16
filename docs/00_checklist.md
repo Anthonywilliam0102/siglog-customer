@@ -14,30 +14,33 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Convidar os 3 colegas ao repositório
 
 ## Fase 1 — Produto e UX (Encontros 1–2) — UI/UX lidera
-- [ ] docs/01_product_vision.md (Project Charter)
-- [ ] Matriz CSD
-- [ ] docs/03_personas.md
-- [ ] Mapa de Empatia
-- [ ] Protótipo Figma + teste de usabilidade
-- [ ] docs/02_requirements.md (requisitos funcionais e não funcionais)
+- [x] docs/01_product_vision.md (Project Charter) — rascunho, 👤 UI/UX revisar
+- [ ] 👤 Matriz CSD (UI/UX)
+- [x] docs/03_personas.md — rascunho, 👤 validar com pesquisa
+- [ ] 👤 Mapa de Empatia (UI/UX)
+- [ ] 👤 Protótipo Figma + teste de usabilidade (UI/UX)
+- [x] docs/02_requirements.md (RF, RNF, regras de negócio)
 
 ## Fase 2 — DDD e contratos (Encontros 3–6, Marco 1)
-- [ ] Event Storming
-- [ ] docs/04_ddd.md (agregados, comandos, eventos)
-- [ ] Bounded Context + docs/05_context_map.md
-- [ ] docs/06_architecture.md
-- [ ] openapi.yaml (endpoints A.6)
-- [ ] docs/08_events.md (catálogo: payload, produtor, consumidores)
-- [ ] ADR-001..005 (pasta docs/adr/)
+- [x] Event Storming (resumo em docs/04_ddd.md) — 👤 fazer a sessão visual com o time
+- [x] docs/04_ddd.md (agregados, comandos, eventos)
+- [x] Bounded Context + docs/05_context_map.md
+- [x] docs/06_architecture.md
+- [x] openapi.yaml (gerado do código)
+- [x] docs/08_events.md (catálogo) — eventos consumidos PENDENTES de alinhamento
+- [x] ADR-001..005 (docs/adr/)
 - [ ] 👤 Obter OpenAPI/Event Catalog dos outros squads e alinhar broker RabbitMQ
 
 ## Fase 3 — Código, banco, mensageria (Encontros 7–10, Marco 2)
-- [ ] Modelo de dados + migrações Alembic (docs/09_database.md)
+- [x] Modelo de dados + migração Alembic 0001 (docs/09_database.md)
 - [ ] 👤 Projeto Supabase criado (pessoa do banco); credenciais só em .env / GitHub Secrets
-- [ ] UC01–UC10 implementados
-- [ ] Publicação de eventos (PedidoCriado, SinistroRegistrado…)
-- [ ] Testes unitários, integração e contrato
-- [ ] Autenticação JWT + papéis (docs/11_security.md)
+- [x] UC01–UC10 implementados (API + regras RN01–RN06)
+- [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
+- [x] Testes unitários, integração e contrato (23 testes, SQLite)
+- [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
+- [x] Autenticação JWT + papéis (docs/11_security.md)
+- [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
+- [ ] Front-end do portal (👤 Front) e integração com a API
 
 ## Fase 4 — Observabilidade, segurança, carga (Encontros 11–14)
 - [ ] OpenTelemetry (traces → Jaeger) — docs/10_observability.md

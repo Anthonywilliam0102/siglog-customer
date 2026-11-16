@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     service_name: str = "siglog-customer"
     database_url: str = "postgresql+psycopg://siglog:siglog_dev@localhost:5432/siglog_customer"
     rabbitmq_url: str = "amqp://siglog:siglog_dev@localhost:5672/"
+    jwt_secret: str = ""
+    tracking_base_url: str = ""
+    events_exchange: str = "siglog.events"
 
 
 settings = Settings()

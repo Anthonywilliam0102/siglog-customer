@@ -1,12 +1,28 @@
 # Ambiente local completo do SIG-Log Customer.
 # Uso: cp .env.example .env && docker compose up -d --build
 services:
-  api:
+  migrate:
     build: .
+    image: siglog-customer:local
+    env_file: .env
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    image: siglog-customer:local
     env_file: .env
     ports: ["8000:8000"]
     depends_on:
-      postgres: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+      rabbitmq: { condition: service_healthy }
+
+  worker:
+    image: siglog-customer:local
+    env_file: .env
+    command: ["python", "-m", "src.infrastructure.outbox_publisher"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
       rabbitmq: { condition: service_healthy }
 
   postgres:
