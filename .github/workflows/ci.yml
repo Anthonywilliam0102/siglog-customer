@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Unit tests
+        run: pytest tests/unit --cov=src --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        with: { name: coverage, path: coverage.xml }
+
+  docker-security:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker build
+        run: docker build -t siglog-customer:ci .
+      - name: Trivy scan (imagem)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: siglog-customer:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"   # troque para "1" quando o time quiser bloquear o pipeline
+
+  # SonarCloud: ativar depois de criar o projeto e o secret SONAR_TOKEN (ver docs/00_checklist.md)
