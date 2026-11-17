@@ -2,7 +2,7 @@ fastapi==0.163.1
 uvicorn[standard]==0.54.0
 pydantic-settings==2.16.3
 prometheus-client==0.26.0
-SQLAlchemy==2.1.9
+SQLAlchemy==2.0.58
 alembic==1.20.1
 psycopg[binary]==3.3.9
 aio-pika==10.2.3

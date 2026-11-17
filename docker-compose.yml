@@ -21,6 +21,8 @@ services:
     image: siglog-customer:local
     env_file: .env
     command: ["python", "-m", "src.infrastructure.outbox_publisher"]
+    healthcheck:
+      disable: true   # a imagem herda o healthcheck HTTP da API; o worker não expõe /health
     depends_on:
       migrate: { condition: service_completed_successfully }
       rabbitmq: { condition: service_healthy }
