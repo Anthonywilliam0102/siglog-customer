@@ -58,4 +58,5 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] Release Candidate (congelamento)
 - [ ] Release v1.0.0 (tag)
 - [ ] README final
-- [ ] Deck do Demoday
+- [x] Deck do Demoday (artefato Claude, 11 slides) — 👤 revisar, preencher nomes e resultados do K6
+- [x] docs/14_demoday_roteiro.md (roteiro e checklist de ensaio)
