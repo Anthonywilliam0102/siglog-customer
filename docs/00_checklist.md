@@ -34,15 +34,19 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 ## Fase 3 — Código, banco, mensageria (Encontros 7–10, Marco 2)
 - [x] Modelo de dados + migração Alembic 0001 (docs/09_database.md)
 - [x] Código preparado para o Supabase (SSL, pooler, RLS 0002, tokens ES256/HS256) — `docs/15_supabase.md`
-- [ ] 👤 Projeto Supabase criado (pessoa do banco); `DATABASE_URL` e `SUPABASE_URL` só em `.env`; rodar com `docker-compose.supabase.yml`
+- [x] Projeto Supabase criado (região São Paulo, Data API desligada); `DATABASE_URL` e `SUPABASE_URL` só no `.env`
+- [x] Validado no Supabase (VS Code, 23/11): JWKS `ES256`; `migrate` até `0002`; 9 tabelas com RLS e sem policies; login real de cliente e atendente; `POST /customers` 201; `GET /customers/{id}` 200/200/401; RN02 → 403 (com token de dev)
+- [ ] 👤 (opcional, para a demo) criar `cliente2@exemplo.com` no Supabase e provar o 403 com login real
+- [ ] 👤 Criar o usuário atendente de verdade no padrão da equipe (hoje é `atendimento@exemplo.com`, com perfil `atendente`)
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
-- [x] Testes unitários, integração e contrato (33 testes, SQLite)
+- [x] Testes unitários, integração e contrato (47 testes, SQLite)
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
 - [x] Esqueleto do front em `frontend/` (Vite + React; cotação e pedido) — 👤 Front evolui conforme o Figma
-- [ ] 👤 Front: telas de SAC, sinistro, rastreamento, avaliação e login (Supabase Auth)
+- [x] API: `GET /me` e listagens (`/customers`, `/orders`, `/tickets`, `/claims`) com RN02, filtros e paginação (47 testes)
+- [ ] Front: login (Supabase Auth), cotação/pedido, meus pedidos, SAC, sinistro, avaliação e visão do atendente
 - [ ] 👤 Deploy do front no Cloudflare Pages (build: `npm run build`, diretório `frontend`, saída `dist`, var `VITE_API_URL`)
 
 ## Fase 4 — Observabilidade, segurança, carga (Encontros 11–14)

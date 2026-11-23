@@ -47,8 +47,9 @@ Trabalho na branch `develop`; `main` recebe PR (PR #1 aberto). Mensagens de comm
 Não fazer push em `main`, merge, tag `v1.0.0` ou ações destrutivas sem confirmação do usuário.
 
 ## Estado atual (ver docs/00_checklist.md para o detalhe)
-Feito: docs de produto/DDD/ADRs, API UC01–UC10, Outbox + worker, Alembic, OTel, dashboard Grafana, script K6, ATAM, esqueleto do front, deck do Demoday, 33 testes (SQLite) e CI verde.
+Feito: docs de produto/DDD/ADRs, API UC01–UC10, Outbox + worker, Alembic, OTel, dashboard Grafana, script K6, ATAM, esqueleto do front, deck do Demoday, 47 testes (SQLite) e CI verde.
 Validado no Docker local (23/11): migrate, fluxo cliente→pedido, RN02/RN07 e publicação do Outbox. Corrigido `httpx` fora do requirements.txt (API caía na imagem).
+Supabase validado (23/11): JWKS ES256, migrate 0002, RLS em 9 tabelas, login real (cliente/atendente) e RN02. API com `GET /me` e listagens. 47 testes.
 Confirmado também (23/11): Jaeger com traces da API e Grafana com os painéis operacionais retornando dados.
 **Pendente / NÃO VERIFICADO:** painéis de tickets, sinistros e satisfação com dados (falta gerar tráfego) · entrega dos eventos em uma fila (só há publicação) · executar o K6 e preencher `docs/13_load_test.md` ·
 testes contra PostgreSQL/RabbitMQ reais · consumidores de eventos (Tracking, WMS, Financeiro — dependem dos contratos dos outros squads; formato do Tracking é SUPOSIÇÃO) ·
