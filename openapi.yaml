@@ -4,18 +4,84 @@ info:
   description: CRM, SAC & Portal do Cliente — Squad 06
   version: 0.1.0
 paths:
+  /me:
+    get:
+      tags:
+      - sessão
+      summary: Quem sou eu (perfil do token)
+      operationId: get_me_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeOut'
+        '401':
+          description: Não autenticado
+      security:
+      - HTTPBearer: []
   /customers:
+    get:
+      tags:
+      - clientes
+      summary: Listar clientes
+      operationId: list_customers_customers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerOut'
+                title: Response List Customers Customers Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
     post:
       tags:
       - clientes
       summary: UC01 – Cadastrar cliente
       operationId: post_customer_customers_post
+      security:
+      - HTTPBearer: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CustomerIn'
-        required: true
       responses:
         '201':
           description: Successful Response
@@ -33,8 +99,261 @@ paths:
           description: Regra de negócio/validação
         '409':
           description: Documento já cadastrado
+  /orders:
+    get:
+      tags:
+      - pedidos
+      summary: Listar pedidos
+      operationId: list_orders_orders_get
       security:
       - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PedidoStatus'
+          - type: 'null'
+          title: Status
+      - name: customer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Customer Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderOut'
+                title: Response List Orders Orders Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - pedidos
+      summary: UC03 – Criar pedido a partir de cotação
+      operationId: post_order_orders_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+        '409':
+          description: Cotação já usada
+  /tickets:
+    get:
+      tags:
+      - SAC
+      summary: Listar tickets
+      operationId: list_tickets_tickets_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/TicketStatus'
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketOut'
+                title: Response List Tickets Tickets Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - SAC
+      summary: UC06 – Abrir atendimento
+      operationId: post_ticket_tickets_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /claims:
+    get:
+      tags:
+      - sinistros
+      summary: Listar sinistros
+      operationId: list_claims_claims_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimOut'
+                title: Response List Claims Claims Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - sinistros
+      summary: UC07 – Registrar sinistro
+      operationId: post_claim_claims_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
   /customers/{customer_id}:
     get:
       tags:
@@ -93,37 +412,6 @@ paths:
           description: Não encontrado
         '422':
           description: Regra de negócio/validação
-      security:
-      - HTTPBearer: []
-  /orders:
-    post:
-      tags:
-      - pedidos
-      summary: UC03 – Criar pedido a partir de cotação
-      operationId: post_order_orders_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrderIn'
-        required: true
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderOut'
-        '401':
-          description: Não autenticado
-        '403':
-          description: Acesso negado
-        '404':
-          description: Não encontrado
-        '422':
-          description: Regra de negócio/validação
-        '409':
-          description: Cotação já usada
       security:
       - HTTPBearer: []
   /orders/{order_id}:
@@ -227,35 +515,6 @@ paths:
           description: Não encontrado
         '422':
           description: Regra de negócio/validação
-  /tickets:
-    post:
-      tags:
-      - SAC
-      summary: UC06 – Abrir atendimento
-      operationId: post_ticket_tickets_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TicketIn'
-        required: true
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TicketOut'
-        '401':
-          description: Não autenticado
-        '403':
-          description: Acesso negado
-        '404':
-          description: Não encontrado
-        '422':
-          description: Regra de negócio/validação
-      security:
-      - HTTPBearer: []
   /tickets/{ticket_id}:
     get:
       tags:
@@ -361,35 +620,6 @@ paths:
           description: Não encontrado
         '422':
           description: Regra de negócio/validação
-  /claims:
-    post:
-      tags:
-      - sinistros
-      summary: UC07 – Registrar sinistro
-      operationId: post_claim_claims_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClaimIn'
-        required: true
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClaimOut'
-        '401':
-          description: Não autenticado
-        '403':
-          description: Acesso negado
-        '404':
-          description: Não encontrado
-        '422':
-          description: Regra de negócio/validação
-      security:
-      - HTTPBearer: []
   /claims/{claim_id}:
     get:
       tags:
@@ -707,6 +937,19 @@ components:
       - ENTREGA
       - ATENDIMENTO
       title: FeedbackTarget
+    MeOut:
+      properties:
+        sub:
+          type: string
+          title: Sub
+        role:
+          type: string
+          title: Role
+      type: object
+      required:
+      - sub
+      - role
+      title: MeOut
     MessageIn:
       properties:
         mensagem:

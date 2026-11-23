@@ -149,3 +149,8 @@ class FeedbackOut(Out):
     comentario: str | None
     order_id: uuid.UUID | None
     ticket_id: uuid.UUID | None
+
+
+class MeOut(BaseModel):
+    sub: str
+    role: str

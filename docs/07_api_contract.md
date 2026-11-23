@@ -14,6 +14,8 @@ O contrato oficial é o **[openapi.yaml](../openapi.yaml)** (gerado do código c
 | — | `PATCH /tickets/{id}/status` | equipe |
 | UC07/08 | `POST /claims` · `GET /claims/{id}` | dono, equipe |
 | UC09/10 | `POST /feedback` (`target`: ENTREGA \| ATENDIMENTO) | dono, equipe |
+| — | `GET /me` | todos autenticados (sub e perfil do token) |
+| — | `GET /customers` · `GET /orders` · `GET /tickets` · `GET /claims` (filtros `status`, `customer_id`; paginação `limit` 1–100, `offset`) | cliente: só os próprios (RN02); equipe: todos |
 | infra | `GET /health` · `GET /metrics` | público (restringir em produção) |
 
 **Erros:** 401 sem/ token inválido · 403 acesso negado (RN02) · 404 não encontrado · 409 conflito (documento duplicado, cotação já usada, avaliação repetida) · 422 validação/regra de negócio · 503 dependência (Tracking) indisponível.

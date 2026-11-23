@@ -243,3 +243,40 @@ def avaliar(session: Session, actor: Actor, target: FeedbackTarget, nota: int,
         _emit(session, "EntregaAvaliada", {
             "pedido_id": str(order_id), "cliente_id": str(customer_id), "nota": nota})
     return f
+
+
+# ---------- listagens (portal e fila do atendimento) ----------
+def _listar(session: Session, actor: Actor, model, *where, limit: int = 50, offset: int = 0):
+    """RN02: cliente só enxerga o que pertence aos cadastros dele; equipe enxerga tudo."""
+    stmt = select(model)
+    if model is not m.Customer:
+        stmt = stmt.join(m.Customer, m.Customer.id == model.customer_id)
+    if not actor.is_staff:
+        stmt = stmt.where(m.Customer.owner_sub == actor.sub)
+    for cond in where:
+        stmt = stmt.where(cond)
+    return list(session.scalars(stmt.order_by(model.created_at.desc(), model.id).limit(limit).offset(offset)))
+
+
+def listar_clientes(session: Session, actor: Actor, limit: int = 50, offset: int = 0):
+    return _listar(session, actor, m.Customer, limit=limit, offset=offset)
+
+
+def listar_pedidos(session: Session, actor: Actor, status: PedidoStatus | None = None,
+                   customer_id: uuid.UUID | None = None, limit: int = 50, offset: int = 0):
+    where = []
+    if status:
+        where.append(m.Order.status == status)
+    if customer_id:
+        where.append(m.Order.customer_id == customer_id)
+    return _listar(session, actor, m.Order, *where, limit=limit, offset=offset)
+
+
+def listar_tickets(session: Session, actor: Actor, status: TicketStatus | None = None,
+                   limit: int = 50, offset: int = 0):
+    where = [m.Ticket.status == status] if status else []
+    return _listar(session, actor, m.Ticket, *where, limit=limit, offset=offset)
+
+
+def listar_sinistros(session: Session, actor: Actor, limit: int = 50, offset: int = 0):
+    return _listar(session, actor, m.Claim, limit=limit, offset=offset)

@@ -1,12 +1,13 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.api import schemas as s
 from src.api.auth import get_actor
 from src.application import services as svc
 from src.application.services import Actor
+from src.domain.rules import PedidoStatus, TicketStatus
 from src.infrastructure.db import get_session
 
 router = APIRouter()
@@ -20,6 +21,40 @@ def commit(session: Session, value):
 
 ERR = {401: {"description": "Não autenticado"}, 403: {"description": "Acesso negado"},
        404: {"description": "Não encontrado"}, 422: {"description": "Regra de negócio/validação"}}
+
+
+Limit = Query(50, ge=1, le=100, description="Itens por página (máx. 100)")
+Offset = Query(0, ge=0, description="Itens a pular")
+
+
+@router.get("/me", response_model=s.MeOut, tags=["sessão"], summary="Quem sou eu (perfil do token)",
+            responses={401: {"description": "Não autenticado"}})
+def get_me(actor: Actor = Depends(get_actor)):
+    return {"sub": actor.sub, "role": actor.role}
+
+
+@router.get("/customers", response_model=list[s.CustomerOut], tags=["clientes"], summary="Listar clientes", responses=ERR)
+def list_customers(limit: int = Limit, offset: int = Offset, session: Session = Depends(get_session),
+                   actor: Actor = Depends(get_actor)):
+    return svc.listar_clientes(session, actor, limit, offset)
+
+
+@router.get("/orders", response_model=list[s.OrderOut], tags=["pedidos"], summary="Listar pedidos", responses=ERR)
+def list_orders(status: PedidoStatus | None = None, customer_id: uuid.UUID | None = None, limit: int = Limit,
+                offset: int = Offset, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.listar_pedidos(session, actor, status, customer_id, limit, offset)
+
+
+@router.get("/tickets", response_model=list[s.TicketOut], tags=["SAC"], summary="Listar tickets", responses=ERR)
+def list_tickets(status: TicketStatus | None = None, limit: int = Limit, offset: int = Offset,
+                 session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.listar_tickets(session, actor, status, limit, offset)
+
+
+@router.get("/claims", response_model=list[s.ClaimOut], tags=["sinistros"], summary="Listar sinistros", responses=ERR)
+def list_claims(limit: int = Limit, offset: int = Offset, session: Session = Depends(get_session),
+                actor: Actor = Depends(get_actor)):
+    return svc.listar_sinistros(session, actor, limit, offset)
 
 
 @router.post("/customers", response_model=s.CustomerOut, status_code=201, tags=["clientes"],
