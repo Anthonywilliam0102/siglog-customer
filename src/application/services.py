@@ -6,11 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from src.config.settings import settings
 from src.domain import events, rules
 from src.domain.errors import Conflict, DomainError, Forbidden, NotFound
 from src.domain.rules import FeedbackTarget, PedidoStatus, Prioridade, Role, TicketStatus
 from src.infrastructure import models as m
-from src.infrastructure.clients.tracking import fetch_tracking
+from src.infrastructure.clients.tracking import fetch_tracking, mock_tracking
 
 
 @dataclass(frozen=True)
@@ -119,6 +120,8 @@ def consultar_pedido(session: Session, actor: Actor, order_id: uuid.UUID) -> m.O
 
 def consultar_rastreamento(session: Session, actor: Actor, order_id: uuid.UUID) -> dict:
     o = consultar_pedido(session, actor, order_id)
+    if settings.tracking_mock and not settings.tracking_base_url:
+        return mock_tracking(o)
     return fetch_tracking(str(o.id))
 
 

@@ -74,6 +74,7 @@ class TrackingOut(BaseModel):
     order_id: str
     status: str
     events: list[dict] = []
+    source: str = "tracking"  # "mock" quando o rastreamento é simulado (demo)
 
 
 class TicketIn(BaseModel):

@@ -40,13 +40,16 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Criar o usuário atendente de verdade no padrão da equipe (hoje é `atendimento@exemplo.com`, com perfil `atendente`)
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
-- [x] Testes unitários, integração e contrato (47 testes, SQLite)
+- [x] Testes unitários, integração e contrato (50 testes, SQLite)
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
 - [x] Esqueleto do front em `frontend/` (Vite + React; cotação e pedido) — 👤 Front evolui conforme o Figma
 - [x] API: `GET /me` e listagens (`/customers`, `/orders`, `/tickets`, `/claims`) com RN02, filtros e paginação (47 testes)
-- [ ] Front: login (Supabase Auth), cotação/pedido, meus pedidos, SAC, sinistro, avaliação e visão do atendente
+- [x] Front completo em `frontend/`: login (Supabase Auth), cadastro, cotação/pedido, pedidos com rastreamento e avaliação, SAC com SLA, sinistros e fila do atendente. Testado ponta a ponta no navegador (21 verificações, cliente e atendente, desktop e celular)
+- [x] Rastreamento simulado (`TRACKING_MOCK`) e CORS configurável (`CORS_ORIGINS`) — 50 testes
+- [ ] 👤 Preencher `frontend/.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` e validar o login real no navegador
+- [ ] 👤 Ligar `TRACKING_MOCK=true` no `.env` para a demo mostrar rastreamento (o `.env.example` já traz)
 - [ ] 👤 Deploy do front no Cloudflare Pages (build: `npm run build`, diretório `frontend`, saída `dist`, var `VITE_API_URL`)
 
 ## Fase 4 — Observabilidade, segurança, carga (Encontros 11–14)

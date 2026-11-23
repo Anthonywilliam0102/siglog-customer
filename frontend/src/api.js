@@ -1,13 +1,30 @@
-// Cliente da API SIG-Log Customer. Contrato: ../openapi.yaml
+import { getToken, sair } from './session.js';
+
+// Em dev, '/api' é redirecionado pelo Vite para a API local. Em produção use VITE_API_URL.
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
-export async function api(path, { method = 'GET', body, token } = {}) {
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function mensagem(data, status) {
+  if (typeof data?.detail === 'string') return data.detail;
+  if (Array.isArray(data?.detail) && data.detail[0]?.msg) return `Dados inválidos: ${data.detail[0].msg}`;
+  return `Erro ${status}`;
+}
+
+export async function api(path, { method = 'GET', body } = {}) {
+  const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : `Erro ${res.status}`);
+  if (res.status === 401) await sair();
+  if (!res.ok) throw new ApiError(mensagem(data, res.status), res.status);
   return data;
 }

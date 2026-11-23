@@ -7,6 +7,7 @@ import logging
 import time
 
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
@@ -40,6 +41,10 @@ app = FastAPI(
 )
 
 
+if settings.cors_origins:
+    app.add_middleware(
+        CORSMiddleware, allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
+        allow_methods=["GET", "POST", "PATCH"], allow_headers=["Authorization", "Content-Type"])
 app.include_router(router)
 setup_tracing(app, engine)
 REGISTRY.register(DomainCollector(SessionLocal))

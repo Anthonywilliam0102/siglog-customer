@@ -27,8 +27,9 @@ O Compose sobe também `migrate` (Alembic) e `worker` (publica eventos do Outbox
 Contrato: [openapi.yaml](openapi.yaml) · Eventos: [docs/08_events.md](docs/08_events.md)
 
 ## Front-end (`frontend/`)
+Portal completo (login, cotação, pedidos, SAC, sinistros e fila do atendente). Detalhes em [frontend/README.md](frontend/README.md).
 ```bash
-cd frontend && npm install && npm run dev   # http://localhost:5173 (proxy /api -> :8000)
+cd frontend && cp .env.example .env.local && npm install && npm run dev   # http://localhost:5173 (proxy /api -> :8000)
 ```
 
 ## Desenvolvimento
