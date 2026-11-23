@@ -31,7 +31,7 @@ Credenciais lidas de `.env.validacao` (ignorado pelo git); nenhum token, senha o
 ## 2026-11-23 — Rodada 3 (front + `GET /me`)
 Nenhum token, senha ou chave foi impresso ou registrado.
 - CONFIRMADO: `frontend/.env.local` criado a partir do `.env.example` (URL do Supabase e chave publishable; `VITE_API_URL` vazio) e **ignorado pelo git** (`.gitignore`, regra `.env.*`).
-- CONFIRMADO: `TRACKING_MOCK=true` acrescentado ao `.env` (a linha não existia); o container da API recebe `TRUE`/`true`. Demais variáveis intactas.
+- CONFIRMADO: `TRACKING_MOCK=true` acrescentado ao `.env` (a linha não existia); o container da API recebe `true`. Demais variáveis intactas.
 - CONFIRMADO: stack com `docker-compose.supabase.yml` reconstruída; `migrate` saiu com 0, API *healthy*, worker no ar.
 - CONFIRMADO: `npm install` e `npm run dev` (Vite 5.4, Node 24); `http://localhost:5173` responde 200 e o proxy `/api/health` responde 200.
 - CONFIRMADO: `GET /me` com token real do Supabase: `cliente@exemplo.com` → 200, `role = cliente`; `atendimento@exemplo.com` → 200, `role = atendente`. Resultado igual direto na API (`:8000`) e pelo proxy do front (`:5173/api/me`).
