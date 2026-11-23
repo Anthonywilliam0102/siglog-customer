@@ -27,3 +27,12 @@ Credenciais lidas de `.env.validacao` (ignorado pelo git); nenhum token, senha o
 - FALHOU / NÃO VERIFICADO: o 403 do segundo cliente. O `cliente2` do arquivo recebeu `invalid_credentials` no login e **não existe** em `auth.users` (só há `cliente@` e `atendimento@`). Sem token válido a chamada deu 401, o que não prova a RN02 em Supabase. Nenhum usuário foi criado.
 - CONFIRMADO (parcial): RN02 contra o banco Supabase com um **token de desenvolvimento** (HS256, `sub` diferente, perfil cliente): `GET /customers/{id}` do cliente do Supabase → 403; dono → 200; atendente → 200. Isso prova a regra e que a API aceita HS256 junto com ES256, mas **não** é um segundo usuário real do Supabase (o projeto só tem `cliente@` e `atendimento@`).
 - NÃO VERIFICADO: 403 com login real de um segundo cliente do Supabase (não existe usuário `cliente2`).
+
+## 2026-11-23 — Rodada 3 (front + `GET /me`)
+Nenhum token, senha ou chave foi impresso ou registrado.
+- CONFIRMADO: `frontend/.env.local` criado a partir do `.env.example` (URL do Supabase e chave publishable; `VITE_API_URL` vazio) e **ignorado pelo git** (`.gitignore`, regra `.env.*`).
+- CONFIRMADO: `TRACKING_MOCK=true` acrescentado ao `.env` (a linha não existia); o container da API recebe `TRUE`/`true`. Demais variáveis intactas.
+- CONFIRMADO: stack com `docker-compose.supabase.yml` reconstruída; `migrate` saiu com 0, API *healthy*, worker no ar.
+- CONFIRMADO: `npm install` e `npm run dev` (Vite 5.4, Node 24); `http://localhost:5173` responde 200 e o proxy `/api/health` responde 200.
+- CONFIRMADO: `GET /me` com token real do Supabase: `cliente@exemplo.com` → 200, `role = cliente`; `atendimento@exemplo.com` → 200, `role = atendente`. Resultado igual direto na API (`:8000`) e pelo proxy do front (`:5173/api/me`).
+- NÃO VERIFICADO: telas do front no navegador (login, cotação, pedidos, chamados, sinistros, atendimento); o teste foi só de HTTP.
