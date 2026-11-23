@@ -35,6 +35,13 @@ cd frontend && npm install && npm run dev
 - Mudou rotas/schemas → regenerar `openapi.yaml`. Mudou regra → atualizar `docs/` e testes.
 - Segredos nunca no repositório (`.env` é ignorado; CI usa GitHub Secrets).
 
+## Fluxo com dois Claudes (nuvem + VS Code)
+- **Claude da nuvem (builder):** escreve código, testes, migrações, CI e documentação; mantém `docs/00_checklist.md`, `openapi.yaml` e este arquivo.
+- **Claude do VS Code (executor local):** roda Docker, K6, Supabase e valida; **não edita código nem o checklist**. Registra o que verificou em `docs/validacao_local.md` (arquivo só dele, sempre adicionando no fim) e responde com o relatório em CONFIRMADO / NÃO VERIFICADO / FALHOU.
+- **Antes de começar qualquer tarefa:** `git pull`. Se precisar corrigir algo no código, descreva o problema no relatório em vez de commitar (evita conflito e correção duplicada).
+- **Segredos** (Supabase, senhas) ficam só no `.env` local e nunca vão para commit, chat ou relatório.
+- **Próximo passo** sai sempre do checklist: o executor lê `docs/00_checklist.md` e executa os itens marcados com 👤 que dependem da máquina local.
+
 ## Git
 Trabalho na branch `develop`; `main` recebe PR (PR #1 aberto). Mensagens de commit em português, no formato `tipo: resumo`.
 Não fazer push em `main`, merge, tag `v1.0.0` ou ações destrutivas sem confirmação do usuário.
@@ -42,7 +49,8 @@ Não fazer push em `main`, merge, tag `v1.0.0` ou ações destrutivas sem confir
 ## Estado atual (ver docs/00_checklist.md para o detalhe)
 Feito: docs de produto/DDD/ADRs, API UC01–UC10, Outbox + worker, Alembic, OTel, dashboard Grafana, script K6, ATAM, esqueleto do front, deck do Demoday, 33 testes (SQLite) e CI verde.
 Validado no Docker local (23/11): migrate, fluxo cliente→pedido, RN02/RN07 e publicação do Outbox. Corrigido `httpx` fora do requirements.txt (API caía na imagem).
-**Pendente / NÃO VERIFICADO:** reconstruir e confirmar API *healthy* e alvo do Prometheus *up* · Grafana com dados (senha: `GRAFANA_ADMIN_PASSWORD`, padrão `admin_dev`) · entrega dos eventos em uma fila (só há publicação) · executar o K6 e preencher `docs/13_load_test.md` ·
+Confirmado também (23/11): Jaeger com traces da API e Grafana com os painéis operacionais retornando dados.
+**Pendente / NÃO VERIFICADO:** painéis de tickets, sinistros e satisfação com dados (falta gerar tráfego) · entrega dos eventos em uma fila (só há publicação) · executar o K6 e preencher `docs/13_load_test.md` ·
 testes contra PostgreSQL/RabbitMQ reais · consumidores de eventos (Tracking, WMS, Financeiro — dependem dos contratos dos outros squads; formato do Tracking é SUPOSIÇÃO) ·
 SonarCloud (`SONAR_TOKEN`) e Trivy bloqueante · UI/UX (CSD, Mapa de Empatia, Figma) · telas do front além de cotação/pedido · tag `v1.0.0`.
 

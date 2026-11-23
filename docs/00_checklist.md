@@ -64,7 +64,12 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Reconstruir (`docker compose up -d --build`) e conferir API *healthy*, alvo do Prometheus *up* e dashboard do Grafana (login `admin` / `GRAFANA_ADMIN_PASSWORD` do `.env`, padrão `admin_dev`)
 - [ ] Criar fila ligada ao exchange para provar a entrega dos eventos (hoje só há publicação)
 - [x] Reconstruído com o `httpx` corrigido: API *healthy*, Prometheus com api e worker *up*, 6 eventos do Outbox publicados; `ruff` e 33 testes passando (Python 3.12)
-- [ ] 👤 Conferir traces no Jaeger (o serviço `siglog-customer` aparece na lista) e validar o retry do worker numa subida a frio
+- [x] Jaeger: serviço `siglog-customer` com 20 traces (POST /customers, /quotes, /orders, GET, spans de banco) — confirmado no VS Code
+- [x] Grafana: login, datasource e dashboard provisionados; 9 de 12 painéis com dados (os 3 vazios por falta de tráfego, ver abaixo)
+- [ ] 👤 Gerar tickets, sinistros e avaliações e conferir os painéis *Tickets por status*, *Sinistros por status*, *Satisfação média*
+- [ ] 👤 Validar o retry do worker numa subida a frio (`docker compose down && up`) e criar uma fila ligada ao exchange para provar a entrega dos eventos
+- [ ] Worker sem tracing: o trace não atravessa API → worker (propagar `traceparent` no evento) — melhoria, não bloqueia o Demoday
+- Nota: *Disponibilidade* usa `avg_over_time(up[5m])`; cai abaixo de 1 quando a API reinicia dentro da janela (ex.: rebuild)
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)
