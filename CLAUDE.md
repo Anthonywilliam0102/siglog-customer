@@ -1,0 +1,49 @@
+# SIG-Log Customer (Squad 06) — contexto para o Claude
+
+Projeto **acadêmico** (Análise de Sistemas II): módulo CRM, SAC & Portal do Cliente da plataforma SIG-Log.
+Equipe de 4: Banco, Back, Front, UI/UX. Use **somente dados fictícios**. Idioma: português (BR).
+Fonte da verdade do escopo: Project Kit (encontros 1–16) e `docs/00_checklist.md` (progresso e pendências).
+
+## Stack
+Python 3.12 + FastAPI · SQLAlchemy 2.0 + Alembic · PostgreSQL (container; Supabase opcional na demo) · RabbitMQ (Outbox + worker) ·
+Docker Compose · GitHub Actions (CI/CD, GHCR) · OpenTelemetry, Prometheus, Grafana, Jaeger · Trivy · K6 · front React + Vite em `frontend/`.
+
+## Estrutura
+`src/api` (rotas, auth, schemas) · `src/application` (casos de uso UC01–UC10) · `src/domain` (regras puras, eventos) ·
+`src/infrastructure` (db, models, outbox, telemetria, clients/tracking) · `migrations/` (Alembic) · `tests/{unit,integration,contract,load}` ·
+`monitoring/` · `docs/` (13 docs + `adr/`) · `openapi.yaml` (gerado: `python scripts/export_openapi.py`).
+
+## Comandos
+```bash
+cp .env.example .env && docker compose up -d --build     # ambiente completo
+docker compose ps -a ; docker compose logs api worker migrate --tail 40
+python -m venv .venv && . .venv/Scripts/activate          # Git Bash no Windows (Linux/Mac: .venv/bin/activate)
+pip install -r requirements-dev.txt && ruff check . && pytest
+python scripts/gen_token.py <sub> <cliente|atendente|gestor> [horas]   # JWT de dev (exige JWT_SECRET igual ao .env)
+python scripts/export_openapi.py ; python scripts/gen_dashboard.py     # regenerar contrato / dashboard Grafana
+cd frontend && npm install && npm run dev
+```
+
+## Convenções e decisões que NÃO devem ser desfeitas sem conversar
+- **Commit antes da resposta:** as rotas de escrita chamam `commit(session, ...)`. Não mover o commit para o teardown da dependência (roda depois da resposta).
+- **Outbox:** eventos são gravados na mesma transação do negócio; o worker publica no RabbitMQ (exchange `siglog.events`). Consumidores devem ser idempotentes por `event_id`.
+- **RN02:** cliente só acessa os próprios dados (`owner_sub`); atendente/gestor veem tudo. **RN07:** transições de status do pedido (CRIADO → EM_SEPARACAO → EM_TRANSPORTE → ENTREGUE; CANCELADO antes do transporte).
+- **JWT** HS256 com `exp` e `sub` obrigatórios; perfil na claim `role`.
+- Métricas: label `path` é o **template da rota**. Portas do Compose só em `127.0.0.1`.
+- Banco: PostgreSQL (o enunciado exige). Cloudflare D1 (SQLite) foi descartado (ADR-002). Mudou modelo → nova migração Alembic, nunca editar a 0001.
+- Mudou rotas/schemas → regenerar `openapi.yaml`. Mudou regra → atualizar `docs/` e testes.
+- Segredos nunca no repositório (`.env` é ignorado; CI usa GitHub Secrets).
+
+## Git
+Trabalho na branch `develop`; `main` recebe PR (PR #1 aberto). Mensagens de commit em português, no formato `tipo: resumo`.
+Não fazer push em `main`, merge, tag `v1.0.0` ou ações destrutivas sem confirmação do usuário.
+
+## Estado atual (ver docs/00_checklist.md para o detalhe)
+Feito: docs de produto/DDD/ADRs, API UC01–UC10, Outbox + worker, Alembic, OTel, dashboard Grafana, script K6, ATAM, esqueleto do front, deck do Demoday, 33 testes (SQLite) e CI verde.
+**Pendente / NÃO VERIFICADO:** validar o Compose completo no Docker local (api, worker, migrate; evento chegando ao RabbitMQ; Grafana com dados; traces no Jaeger) · executar o K6 e preencher `docs/13_load_test.md` ·
+testes contra PostgreSQL/RabbitMQ reais · consumidores de eventos (Tracking, WMS, Financeiro — dependem dos contratos dos outros squads; formato do Tracking é SUPOSIÇÃO) ·
+SonarCloud (`SONAR_TOKEN`) e Trivy bloqueante · UI/UX (CSD, Mapa de Empatia, Figma) · telas do front além de cotação/pedido · tag `v1.0.0`.
+
+## Como o Claude deve trabalhar aqui
+Entender antes de mudar, alterações pequenas e rastreáveis, rodar `ruff check .` e `pytest` antes de commitar, não inventar endpoints/arquivos,
+classificar o que é CONFIRMADO / NÃO VERIFICADO, e registrar pendências em `docs/00_checklist.md`.
