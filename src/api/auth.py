@@ -1,8 +1,15 @@
-"""Autenticação JWT (HS256). Compatível com tokens do Supabase Auth usando o JWT secret do projeto.
+"""Autenticação JWT.
 
-Claims esperadas: `sub` (id do usuário) e `role` (cliente | atendente | gestor).
-NOTA: no Supabase o papel customizado costuma ir em `app_metadata.role`; aceitamos as duas formas.
+Aceita dois tipos de token:
+- HS256 com `JWT_SECRET` (desenvolvimento e Supabase com chave legada);
+- ES256/RS256 validados pelo JWKS do Supabase (`SUPABASE_URL`), o padrão dos projetos novos.
+
+Perfil (`cliente` | `atendente` | `gestor`): vem de `app_metadata.role` (só o servidor altera) ou da
+claim `role`. O `role: "authenticated"` do Supabase vira `cliente` (menor privilégio). `anon`,
+`service_role` e qualquer outro valor são rejeitados. NUNCA ler perfil de `user_metadata` (o usuário edita).
 """
+from functools import lru_cache
+
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -14,15 +21,36 @@ from src.domain.rules import Role
 bearer = HTTPBearer(auto_error=False)
 
 
+@lru_cache
+def _jwks() -> jwt.PyJWKClient:
+    return jwt.PyJWKClient(f"{settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json", cache_keys=True)
+
+
+def _decode(token: str) -> dict:
+    alg = jwt.get_unverified_header(token).get("alg")
+    if alg == "HS256":
+        if not settings.jwt_secret:
+            raise HTTPException(500, "Autenticação não configurada (JWT_SECRET)")
+        key, algs = settings.jwt_secret, ["HS256"]
+    elif alg in ("ES256", "RS256") and settings.supabase_url:
+        key, algs = _jwks().get_signing_key_from_jwt(token).key, [alg]
+    else:
+        raise jwt.InvalidAlgorithmError("algoritmo não aceito")
+    return jwt.decode(token, key, algorithms=algs, options={"verify_aud": False, "require": ["exp", "sub"]})
+
+
+def _role(claims: dict) -> Role:
+    raw = (claims.get("app_metadata") or {}).get("role") or claims.get("role")
+    if raw == "authenticated":
+        raw = Role.CLIENTE
+    return Role(raw)  # ValueError para anon, service_role, ausente ou desconhecido
+
+
 def get_actor(creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -> Actor:
     if creds is None:
         raise HTTPException(401, "Token ausente")
-    if not settings.jwt_secret:
-        raise HTTPException(500, "Autenticação não configurada (JWT_SECRET)")
     try:
-        claims = jwt.decode(creds.credentials, settings.jwt_secret, algorithms=["HS256"],
-                            options={"verify_aud": False, "require": ["exp", "sub"]})
-        role = claims.get("role") or (claims.get("app_metadata") or {}).get("role")
-        return Actor(sub=str(claims["sub"]), role=Role(role))
+        claims = _decode(creds.credentials)
+        return Actor(sub=str(claims["sub"]), role=_role(claims))
     except (jwt.PyJWTError, KeyError, ValueError) as exc:
         raise HTTPException(401, "Token inválido") from exc

@@ -8,7 +8,8 @@
 | Conteúdo de tickets/sinistros | `ticket_messages`, `claims` | mesmo controle de acesso |
 
 ## Autenticação e autorização
-- **JWT HS256** (`Authorization: Bearer`), validado com `JWT_SECRET`; compatível com o JWT secret do Supabase Auth. Claims obrigatórias: `sub`, `role` e **`exp`** (tokens sem expiração ou expirados são rejeitados).
+- **JWT** (`Authorization: Bearer`): **HS256** com `JWT_SECRET` ou **ES256/RS256** pelo JWKS do Supabase (`SUPABASE_URL`). `alg: none` e outros algoritmos são rejeitados. Claims obrigatórias: `sub`, `role` e **`exp`** (tokens sem expiração ou expirados são rejeitados).
+- **Perfil** vem de `app_metadata.role` (nunca de `user_metadata`). `role: authenticated` do Supabase vira `cliente`; `anon` e `service_role` são rejeitados.
 - **Perfis:** `cliente` (somente dados próprios), `atendente` e `gestor` (equipe: acesso a todos e alteração de status).
 - Em desenvolvimento: `python scripts/gen_token.py <sub> <perfil> [horas]` (expira em 8 h por padrão).
 
@@ -17,6 +18,9 @@ Validação de entrada (Pydantic), respostas de erro sem detalhes internos, usu�
 
 ## Pipeline
 Lint (ruff) → testes → build Docker → **Trivy** (imagem). **SonarCloud**: pendente (precisa do `SONAR_TOKEN`).
+
+## Supabase
+RLS habilitado em todas as tabelas (migração 0002) e sem policies: a Data API (`anon`) não acessa nada; só a nossa API, com o usuário `postgres`. Ver `docs/15_supabase.md`.
 
 ## Rede local
 O Compose publica todas as portas apenas em `127.0.0.1`; outras máquinas da rede não alcançam banco, broker ou Grafana.

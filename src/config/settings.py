@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://siglog:siglog_dev@localhost:5432/siglog_customer"
     rabbitmq_url: str = "amqp://siglog:siglog_dev@localhost:5672/"
     jwt_secret: str = ""
+    supabase_url: str = ""  # ex.: https://<ref>.supabase.co (habilita tokens ES256/RS256 via JWKS)
     tracking_base_url: str = ""
     events_exchange: str = "siglog.events"
     otel_exporter_otlp_endpoint: str = ""  # vazio = tracing desligado

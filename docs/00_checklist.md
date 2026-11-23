@@ -15,9 +15,9 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 
 ## Fase 1 — Produto e UX (Encontros 1–2) — UI/UX lidera
 - [x] docs/01_product_vision.md (Project Charter) — rascunho, 👤 UI/UX revisar
-- [ ] 👤 Matriz CSD (UI/UX)
+- [x] Matriz CSD (rascunho em `docs/16_ux_csd_empatia.md`) — 👤 validar com usuários
 - [x] docs/03_personas.md — rascunho, 👤 validar com pesquisa
-- [ ] 👤 Mapa de Empatia (UI/UX)
+- [x] Mapa de Empatia (rascunho em `docs/16_ux_csd_empatia.md`) — 👤 validar com usuários
 - [ ] 👤 Protótipo Figma + teste de usabilidade (UI/UX)
 - [x] docs/02_requirements.md (RF, RNF, regras de negócio)
 
@@ -33,7 +33,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 
 ## Fase 3 — Código, banco, mensageria (Encontros 7–10, Marco 2)
 - [x] Modelo de dados + migração Alembic 0001 (docs/09_database.md)
-- [ ] 👤 Projeto Supabase criado (pessoa do banco); credenciais só em .env / GitHub Secrets
+- [x] Código preparado para o Supabase (SSL, pooler, RLS 0002, tokens ES256/HS256) — `docs/15_supabase.md`
+- [ ] 👤 Projeto Supabase criado (pessoa do banco); `DATABASE_URL` e `SUPABASE_URL` só em `.env`; rodar com `docker-compose.supabase.yml`
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
 - [x] Testes unitários, integração e contrato (33 testes, SQLite)

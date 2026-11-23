@@ -30,6 +30,7 @@ cd frontend && npm install && npm run dev
 - **RN02:** cliente só acessa os próprios dados (`owner_sub`); atendente/gestor veem tudo. **RN07:** transições de status do pedido (CRIADO → EM_SEPARACAO → EM_TRANSPORTE → ENTREGUE; CANCELADO antes do transporte).
 - **JWT** HS256 com `exp` e `sub` obrigatórios; perfil na claim `role`.
 - Métricas: label `path` é o **template da rota**. Portas do Compose só em `127.0.0.1`.
+- **Demoday:** banco no **Supabase** (`docs/15_supabase.md`; rodar com `docker-compose.supabase.yml`), estrutura do projeto feita pelo Claude. Perfil do usuário só de `app_metadata.role`. Migração 0002 liga RLS: não remover.
 - Banco: PostgreSQL (o enunciado exige). Cloudflare D1 (SQLite) foi descartado (ADR-002). Mudou modelo → nova migração Alembic, nunca editar a 0001.
 - Mudou rotas/schemas → regenerar `openapi.yaml`. Mudou regra → atualizar `docs/` e testes.
 - Segredos nunca no repositório (`.env` é ignorado; CI usa GitHub Secrets).

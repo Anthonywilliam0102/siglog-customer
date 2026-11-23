@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.config.settings import settings
 
-engine = create_engine(settings.database_url, pool_pre_ping=True)
+_connect_args = {}
+if settings.database_url.startswith("postgresql"):
+    # Pooler do Supabase (modo transaction) não suporta prepared statements do psycopg 3.
+    _connect_args["prepare_threshold"] = None
+
+engine = create_engine(settings.database_url, pool_pre_ping=True, connect_args=_connect_args)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 
