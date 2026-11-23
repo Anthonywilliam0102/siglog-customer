@@ -62,6 +62,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Corrigido: `httpx` movido para `requirements.txt` (a API caía em loop na imagem); worker com retry na conexão inicial; smoke test da imagem no CI
 - [ ] 👤 Reconstruir (`docker compose up -d --build`) e conferir API *healthy*, alvo do Prometheus *up* e dashboard do Grafana (login `admin` / `GRAFANA_ADMIN_PASSWORD` do `.env`, padrão `admin_dev`)
 - [ ] Criar fila ligada ao exchange para provar a entrega dos eventos (hoje só há publicação)
+- [x] Reconstruído com o `httpx` corrigido: API *healthy*, Prometheus com api e worker *up*, 6 eventos do Outbox publicados; `ruff` e 33 testes passando (Python 3.12)
+- [ ] 👤 Conferir traces no Jaeger (o serviço `siglog-customer` aparece na lista) e validar o retry do worker numa subida a frio
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)
