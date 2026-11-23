@@ -24,6 +24,20 @@ class PedidoStatus(StrEnum):
     CANCELADO = "CANCELADO"
 
 
+# RN07: transições permitidas do pedido (ENTREGUE e CANCELADO são finais).
+TRANSICOES_PEDIDO = {
+    PedidoStatus.CRIADO: {PedidoStatus.EM_SEPARACAO, PedidoStatus.CANCELADO},
+    PedidoStatus.EM_SEPARACAO: {PedidoStatus.EM_TRANSPORTE, PedidoStatus.CANCELADO},
+    PedidoStatus.EM_TRANSPORTE: {PedidoStatus.ENTREGUE},
+    PedidoStatus.ENTREGUE: set(),
+    PedidoStatus.CANCELADO: set(),
+}
+
+
+def transicao_valida(atual: str, novo: str) -> bool:
+    return PedidoStatus(novo) in TRANSICOES_PEDIDO[PedidoStatus(atual)]
+
+
 class Prioridade(StrEnum):
     ALTA = "ALTA"
     MEDIA = "MEDIA"

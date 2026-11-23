@@ -21,7 +21,7 @@ def get_actor(creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -> A
         raise HTTPException(500, "Autenticação não configurada (JWT_SECRET)")
     try:
         claims = jwt.decode(creds.credentials, settings.jwt_secret, algorithms=["HS256"],
-                            options={"verify_aud": False})
+                            options={"verify_aud": False, "require": ["exp", "sub"]})
         role = claims.get("role") or (claims.get("app_metadata") or {}).get("role")
         return Actor(sub=str(claims["sub"]), role=Role(role))
     except (jwt.PyJWTError, KeyError, ValueError) as exc:

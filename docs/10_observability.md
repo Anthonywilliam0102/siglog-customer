@@ -10,6 +10,8 @@
 **Dashboard:** operacional (requests/min, latência p95, taxa de erros, disponibilidade, mensagens processadas) e de domínio (clientes, tickets, sinistros, SLA, satisfação).
 
 **Observações**
+- O label `path` das métricas usa o **template da rota** (`/orders/{order_id}`), não o path real, para não criar uma série por UUID.
+- O worker do Outbox reinicia sozinho (`restart: unless-stopped`) e registra `outbox_error` sem derrubar o processo.
 - Métricas de domínio são lidas do banco a cada scrape (15 s); simples e suficiente para o porte do projeto. Em escala, trocar por contadores incrementais.
 - `/health` e `/metrics` não geram spans (evita ruído).
 - O trace distribuído CRM → WMS → ... → Financeiro depende de propagar `traceparent` nos eventos/mensagens (PENDENTE, requer os demais squads).

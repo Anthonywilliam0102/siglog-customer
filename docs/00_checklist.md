@@ -36,7 +36,7 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Projeto Supabase criado (pessoa do banco); credenciais só em .env / GitHub Secrets
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
-- [x] Testes unitários, integração e contrato (23 testes, SQLite)
+- [x] Testes unitários, integração e contrato (33 testes, SQLite)
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
@@ -52,6 +52,9 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Script K6 pronto (tests/load/k6.js)
 - [ ] 👤 Executar K6 e preencher resultados em docs/13_load_test.md
 - [x] docs/12_atam.md (4 cenários)
+
+## Revisão do PR #1
+- [x] 9 achados do code-review corrigidos (commit antes da resposta, label de métricas, corrida 409, JWT com exp, worker resiliente, transições de status, CD após CI, portas em localhost, worker sem bloquear o loop)
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)

@@ -7,3 +7,5 @@
 **Decisão:** (b) um microsserviço FastAPI em camadas (API → Application → Domain → Infrastructure).
 **Justificativa:** atende ao enunciado, é simples de operar em Docker e ensina DDD. (c) seria custo excessivo.
 **Consequências:** `Session` do SQLAlchemy atua como Unit of Work diretamente nos casos de uso (pragmático; os repositórios não foram abstraídos). Regras puras ficam em `domain/`. Trade-off: acoplamento da camada de aplicação ao ORM em troca de menos código.
+
+**Transação:** o commit é feito pela rota/caso de uso **antes** de responder (o teardown de dependências com `yield` do FastAPI roda depois do envio da resposta, o que daria 201 sem dado persistido).

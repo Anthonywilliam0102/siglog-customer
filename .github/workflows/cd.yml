@@ -1,8 +1,7 @@
 name: CD
+# Chamado pelo ci.yml (job "publish") somente depois de lint, testes, front e scan passarem.
 on:
-  push:
-    branches: [main]
-    tags: ["v*"]
+  workflow_call:
 
 permissions:
   contents: read

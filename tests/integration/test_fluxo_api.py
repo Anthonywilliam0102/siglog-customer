@@ -54,7 +54,8 @@ def test_fluxo_completo_e_eventos(client, cliente, atendente, session_factory):
     # RN04: não pode avaliar antes de entregue
     fb = {"target": "ENTREGA", "nota": 5, "order_id": oid}
     assert client.post("/feedback", json=fb, headers=cliente).status_code == 422
-    assert client.patch(f"/orders/{oid}/status", json={"status": "ENTREGUE"}, headers=atendente).status_code == 200
+    for st in ("EM_SEPARACAO", "EM_TRANSPORTE", "ENTREGUE"):
+        assert client.patch(f"/orders/{oid}/status", json={"status": st}, headers=atendente).status_code == 200
     assert client.post("/feedback", json=fb, headers=cliente).status_code == 201
     assert client.post("/feedback", json=fb, headers=cliente).status_code == 409  # uma avaliação por pedido
 
@@ -120,3 +121,45 @@ def test_rastreamento_indisponivel_retorna_503(client, cliente):
     cid = _criar_cliente(client, cliente)
     _, oid = _pedido(client, cliente, cid)
     assert client.get(f"/orders/{oid}/tracking", headers=cliente).status_code == 503
+
+
+def test_transicoes_de_status_do_pedido(client, cliente, atendente, session_factory):
+    cid = _criar_cliente(client, cliente)
+    _, oid = _pedido(client, cliente, cid)
+    # pular etapas é inválido
+    assert client.patch(f"/orders/{oid}/status", json={"status": "ENTREGUE"}, headers=atendente).status_code == 422
+    assert client.patch(f"/orders/{oid}/status", json={"status": "EM_SEPARACAO"}, headers=atendente).status_code == 200
+    n = _eventos(session_factory).count("customer.cliente.notificado")
+    # repetir o mesmo status é idempotente e não notifica de novo
+    assert client.patch(f"/orders/{oid}/status", json={"status": "EM_SEPARACAO"}, headers=atendente).status_code == 200
+    assert _eventos(session_factory).count("customer.cliente.notificado") == n
+    # pedido cancelado é final
+    assert client.patch(f"/orders/{oid}/status", json={"status": "CANCELADO"}, headers=atendente).status_code == 200
+    assert client.patch(f"/orders/{oid}/status", json={"status": "ENTREGUE"}, headers=atendente).status_code == 422
+    assert client.patch(f"/orders/{oid}/status", json={"status": "CRIADO"}, headers=atendente).status_code == 422
+
+
+def test_corrida_de_pedido_vira_409_e_nao_500(client, cliente, session_factory):
+    cid = _criar_cliente(client, cliente)
+    qid, _ = _pedido(client, cliente, cid)
+    # simula a corrida: outra requisição ainda via a cotação como não usada
+    with session_factory() as s:
+        s.get(m.Quote, uuid.UUID(qid)).accepted = False
+        s.commit()
+    assert client.post("/orders", json={"quote_id": qid}, headers=cliente).status_code == 409
+
+
+def test_dados_persistidos_antes_da_resposta(client, cliente, session_factory):
+    _criar_cliente(client, cliente)
+    with session_factory() as s:  # sessão nova: só enxerga o que foi commitado
+        assert s.scalar(select(m.Customer)) is not None
+        assert "customer.cotacao.solicitada" not in [e.routing_key for e in s.scalars(select(m.OutboxEvent))]
+
+
+def test_metricas_nao_criam_serie_por_uuid(client, cliente):
+    cid = _criar_cliente(client, cliente)
+    _, oid = _pedido(client, cliente, cid)
+    client.get(f"/orders/{oid}", headers=cliente)
+    metricas = client.get("/metrics").text
+    assert oid not in metricas
+    assert 'path="/orders/{order_id}"' in metricas

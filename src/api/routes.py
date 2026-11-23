@@ -10,6 +10,14 @@ from src.application.services import Actor
 from src.infrastructure.db import get_session
 
 router = APIRouter()
+
+
+def commit(session: Session, value):
+    """Persiste ANTES de responder (ver infrastructure/db.py) e devolve o valor da rota."""
+    session.commit()
+    return value
+
+
 ERR = {401: {"description": "Não autenticado"}, 403: {"description": "Acesso negado"},
        404: {"description": "Não encontrado"}, 422: {"description": "Regra de negócio/validação"}}
 
@@ -17,7 +25,7 @@ ERR = {401: {"description": "Não autenticado"}, 403: {"description": "Acesso ne
 @router.post("/customers", response_model=s.CustomerOut, status_code=201, tags=["clientes"],
              summary="UC01 – Cadastrar cliente", responses={**ERR, 409: {"description": "Documento já cadastrado"}})
 def post_customer(body: s.CustomerIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
-    return svc.cadastrar_cliente(session, actor, **body.model_dump())
+    return commit(session, svc.cadastrar_cliente(session, actor, **body.model_dump()))
 
 
 @router.get("/customers/{customer_id}", response_model=s.CustomerOut, tags=["clientes"], responses=ERR)
@@ -28,13 +36,13 @@ def get_customer(customer_id: uuid.UUID, session: Session = Depends(get_session)
 @router.post("/quotes", response_model=s.QuoteOut, status_code=201, tags=["cotações"],
              summary="UC02 – Solicitar cotação", responses=ERR)
 def post_quote(body: s.QuoteIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
-    return svc.solicitar_cotacao(session, actor, **body.model_dump())
+    return commit(session, svc.solicitar_cotacao(session, actor, **body.model_dump()))
 
 
 @router.post("/orders", response_model=s.OrderOut, status_code=201, tags=["pedidos"],
              summary="UC03 – Criar pedido a partir de cotação", responses={**ERR, 409: {"description": "Cotação já usada"}})
 def post_order(body: s.OrderIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
-    return svc.criar_pedido(session, actor, body.quote_id)
+    return commit(session, svc.criar_pedido(session, actor, body.quote_id))
 
 
 @router.get("/orders/{order_id}", response_model=s.OrderOut, tags=["pedidos"],
@@ -53,13 +61,13 @@ def get_tracking(order_id: uuid.UUID, session: Session = Depends(get_session), a
               summary="(Equipe) Atualizar status do pedido", responses=ERR)
 def patch_order_status(order_id: uuid.UUID, body: s.OrderStatusIn, session: Session = Depends(get_session),
                        actor: Actor = Depends(get_actor)):
-    return svc.atualizar_status_pedido(session, actor, order_id, body.status)
+    return commit(session, svc.atualizar_status_pedido(session, actor, order_id, body.status))
 
 
 @router.post("/tickets", response_model=s.TicketOut, status_code=201, tags=["SAC"],
              summary="UC06 – Abrir atendimento", responses=ERR)
 def post_ticket(body: s.TicketIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
-    return svc.abrir_ticket(session, actor, **body.model_dump())
+    return commit(session, svc.abrir_ticket(session, actor, **body.model_dump()))
 
 
 @router.get("/tickets/{ticket_id}", response_model=s.TicketDetailOut, tags=["SAC"], responses=ERR)
@@ -73,20 +81,20 @@ def get_ticket(ticket_id: uuid.UUID, session: Session = Depends(get_session), ac
              summary="Responder ticket", responses=ERR)
 def post_ticket_message(ticket_id: uuid.UUID, body: s.MessageIn, session: Session = Depends(get_session),
                         actor: Actor = Depends(get_actor)):
-    return svc.responder_ticket(session, actor, ticket_id, body.mensagem)
+    return commit(session, svc.responder_ticket(session, actor, ticket_id, body.mensagem))
 
 
 @router.patch("/tickets/{ticket_id}/status", response_model=s.TicketOut, tags=["SAC"],
               summary="(Equipe) Atualizar status do ticket", responses=ERR)
 def patch_ticket_status(ticket_id: uuid.UUID, body: s.TicketStatusIn, session: Session = Depends(get_session),
                         actor: Actor = Depends(get_actor)):
-    return svc.atualizar_status_ticket(session, actor, ticket_id, body.status)
+    return commit(session, svc.atualizar_status_ticket(session, actor, ticket_id, body.status))
 
 
 @router.post("/claims", response_model=s.ClaimOut, status_code=201, tags=["sinistros"],
              summary="UC07 – Registrar sinistro", responses=ERR)
 def post_claim(body: s.ClaimIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
-    return svc.registrar_sinistro(session, actor, **body.model_dump())
+    return commit(session, svc.registrar_sinistro(session, actor, **body.model_dump()))
 
 
 @router.get("/claims/{claim_id}", response_model=s.ClaimOut, tags=["sinistros"],
@@ -98,4 +106,4 @@ def get_claim(claim_id: uuid.UUID, session: Session = Depends(get_session), acto
 @router.post("/feedback", response_model=s.FeedbackOut, status_code=201, tags=["satisfação"],
              summary="UC09/UC10 – Avaliar atendimento ou entrega", responses={**ERR, 409: {"description": "Já avaliado"}})
 def post_feedback(body: s.FeedbackIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
-    return svc.avaliar(session, actor, **body.model_dump())
+    return commit(session, svc.avaliar(session, actor, **body.model_dump()))

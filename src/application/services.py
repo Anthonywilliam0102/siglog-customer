@@ -36,6 +36,15 @@ def _get(session: Session, model, id_: uuid.UUID, label: str):
     return obj
 
 
+def _flush_or_conflict(session: Session, message: str) -> None:
+    """Flush que traduz violação de unique (corrida entre requisições) em 409."""
+    try:
+        session.flush()
+    except IntegrityError as exc:
+        session.rollback()
+        raise Conflict(message) from exc
+
+
 def _customer_for(session: Session, actor: Actor, customer_id: uuid.UUID) -> m.Customer:
     """RN02: cliente só acessa os próprios dados; equipe acessa todos."""
     c = _get(session, m.Customer, customer_id, "Cliente")
@@ -55,7 +64,7 @@ def cadastrar_cliente(session: Session, actor: Actor, nome: str, documento: str,
     c = m.Customer(owner_sub=owner, nome=nome, documento=doc, tipo=tipo, email=email,
                    telefone=telefone, endereco=endereco)
     session.add(c)
-    session.flush()
+    _flush_or_conflict(session, "Já existe cliente com este documento")
     return c
 
 
@@ -80,7 +89,9 @@ def solicitar_cotacao(session: Session, actor: Actor, customer_id: uuid.UUID, or
 
 # ---------- UC03 ----------
 def criar_pedido(session: Session, actor: Actor, quote_id: uuid.UUID) -> m.Order:
-    q = _get(session, m.Quote, quote_id, "Cotação")
+    q = session.get(m.Quote, quote_id, with_for_update=True)  # trava a cotação contra pedidos simultâneos
+    if q is None:
+        raise NotFound("Cotação não encontrada")
     _customer_for(session, actor, q.customer_id)
     if q.accepted:
         raise Conflict("Cotação já utilizada em um pedido")
@@ -90,7 +101,7 @@ def criar_pedido(session: Session, actor: Actor, quote_id: uuid.UUID) -> m.Order
                 valor_estimado=q.valor_estimado, status=PedidoStatus.CRIADO)
     q.accepted = True
     session.add(o)
-    session.flush()
+    _flush_or_conflict(session, "Cotação já utilizada em um pedido")
     _emit(session, "PedidoCriado", {
         "pedido_id": str(o.id), "cliente_id": str(o.customer_id), "cotacao_id": str(q.id),
         "origem": o.origem, "destino": o.destino,
@@ -117,6 +128,10 @@ def atualizar_status_pedido(session: Session, actor: Actor, order_id: uuid.UUID,
     if not actor.is_staff:
         raise Forbidden("Apenas a equipe pode alterar o status")
     o = _get(session, m.Order, order_id, "Pedido")
+    if status == o.status:
+        return o  # idempotente: sem mudança, sem notificação
+    if not rules.transicao_valida(o.status, status):
+        raise DomainError(f"Transição de status inválida: {o.status} -> {status}")
     o.status = status
     _emit(session, "ClienteNotificado", {
         "cliente_id": str(o.customer_id), "canal": "email", "motivo": f"pedido {status}"})

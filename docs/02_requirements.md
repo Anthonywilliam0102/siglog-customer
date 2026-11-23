@@ -36,3 +36,4 @@
 - RN04: avaliação de entrega só após pedido **entregue**; uma avaliação por pedido.
 - RN05: ticket tem SLA por prioridade (ex.: alta 4h, média 24h, baixa 72h).
 - RN06: pedido cancelado não aceita novo sinistro de transporte.
+- RN07: o pedido segue CRIADO → EM_SEPARACAO → EM_TRANSPORTE → ENTREGUE; pode ser CANCELADO apenas antes do transporte; ENTREGUE e CANCELADO são finais. Repetir o mesmo status é idempotente (não notifica de novo).

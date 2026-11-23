@@ -1,3 +1,5 @@
+import time
+
 import jwt
 import pytest
 from fastapi.testclient import TestClient
@@ -13,8 +15,9 @@ from src.infrastructure.models import Base
 SECRET = "segredo-de-teste-com-mais-de-32-caracteres"
 
 
-def make_token(sub: str, role: str) -> dict:
-    token = jwt.encode({"sub": sub, "role": role}, SECRET, algorithm="HS256")
+def make_token(sub: str, role: str, **extra) -> dict:
+    claims = {"sub": sub, "role": role, "exp": int(time.time()) + 3600, **extra}
+    token = jwt.encode(claims, SECRET, algorithm="HS256")
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -33,7 +36,6 @@ def client(session_factory, monkeypatch):
         s = session_factory()
         try:
             yield s
-            s.commit()
         except Exception:
             s.rollback()
             raise

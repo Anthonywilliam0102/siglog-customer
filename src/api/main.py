@@ -16,6 +16,7 @@ from prometheus_client import (
     Histogram,
     generate_latest,
 )
+from sqlalchemy.exc import IntegrityError
 
 from src.api.routes import router
 from src.config.settings import settings
@@ -50,6 +51,12 @@ async def domain_error_handler(request: Request, exc: DomainError):
     return JSONResponse(status_code=exc.status, content={"detail": exc.message})
 
 
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(request: Request, exc: IntegrityError):
+    log_event("integrity_error", level="WARNING", path=request.url.path)
+    return JSONResponse(status_code=409, content={"detail": "Conflito: o registro já existe ou foi alterado"})
+
+
 def log_event(event: str, level: str = "INFO", **extra) -> None:
     log.info(json.dumps({
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -62,7 +69,6 @@ def log_event(event: str, level: str = "INFO", **extra) -> None:
 
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
-    path = request.url.path
     ACTIVE_REQUESTS.inc()
     start = time.perf_counter()
     status = 500
@@ -72,6 +78,9 @@ async def metrics_middleware(request: Request, call_next):
         return response
     finally:
         ACTIVE_REQUESTS.dec()
+        # Template da rota (/orders/{order_id}), nunca o path real: evita uma série por UUID.
+        route = request.scope.get("route")
+        path = getattr(route, "path", None) or "unmatched"
         REQUEST_DURATION.labels(request.method, path).observe(time.perf_counter() - start)
         REQUESTS_TOTAL.labels(request.method, path, str(status)).inc()
         if status >= 500:

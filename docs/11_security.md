@@ -8,15 +8,18 @@
 | Conteúdo de tickets/sinistros | `ticket_messages`, `claims` | mesmo controle de acesso |
 
 ## Autenticação e autorização
-- **JWT HS256** (`Authorization: Bearer`), validado com `JWT_SECRET`; compatível com o JWT secret do Supabase Auth. Claims: `sub`, `role`.
+- **JWT HS256** (`Authorization: Bearer`), validado com `JWT_SECRET`; compatível com o JWT secret do Supabase Auth. Claims obrigatórias: `sub`, `role` e **`exp`** (tokens sem expiração ou expirados são rejeitados).
 - **Perfis:** `cliente` (somente dados próprios), `atendente` e `gestor` (equipe: acesso a todos e alteração de status).
-- Em desenvolvimento: `python scripts/gen_token.py <sub> <perfil>`.
+- Em desenvolvimento: `python scripts/gen_token.py <sub> <perfil> [horas]` (expira em 8 h por padrão).
 
 ## Proteção da API
 Validação de entrada (Pydantic), respostas de erro sem detalhes internos, usuário não-root no container, imagem `slim`.
 
 ## Pipeline
 Lint (ruff) → testes → build Docker → **Trivy** (imagem). **SonarCloud**: pendente (precisa do `SONAR_TOKEN`).
+
+## Rede local
+O Compose publica todas as portas apenas em `127.0.0.1`; outras máquinas da rede não alcançam banco, broker ou Grafana.
 
 ## Riscos conhecidos / melhorias
 - `/metrics` e `/health` públicos → restringir por rede em produção.
