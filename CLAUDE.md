@@ -40,7 +40,8 @@ Não fazer push em `main`, merge, tag `v1.0.0` ou ações destrutivas sem confir
 
 ## Estado atual (ver docs/00_checklist.md para o detalhe)
 Feito: docs de produto/DDD/ADRs, API UC01–UC10, Outbox + worker, Alembic, OTel, dashboard Grafana, script K6, ATAM, esqueleto do front, deck do Demoday, 33 testes (SQLite) e CI verde.
-**Pendente / NÃO VERIFICADO:** validar o Compose completo no Docker local (api, worker, migrate; evento chegando ao RabbitMQ; Grafana com dados; traces no Jaeger) · executar o K6 e preencher `docs/13_load_test.md` ·
+Validado no Docker local (23/11): migrate, fluxo cliente→pedido, RN02/RN07 e publicação do Outbox. Corrigido `httpx` fora do requirements.txt (API caía na imagem).
+**Pendente / NÃO VERIFICADO:** reconstruir e confirmar API *healthy* e alvo do Prometheus *up* · Grafana com dados (senha: `GRAFANA_ADMIN_PASSWORD`, padrão `admin_dev`) · entrega dos eventos em uma fila (só há publicação) · executar o K6 e preencher `docs/13_load_test.md` ·
 testes contra PostgreSQL/RabbitMQ reais · consumidores de eventos (Tracking, WMS, Financeiro — dependem dos contratos dos outros squads; formato do Tracking é SUPOSIÇÃO) ·
 SonarCloud (`SONAR_TOKEN`) e Trivy bloqueante · UI/UX (CSD, Mapa de Empatia, Figma) · telas do front além de cotação/pedido · tag `v1.0.0`.
 

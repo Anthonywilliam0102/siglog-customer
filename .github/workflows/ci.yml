@@ -39,6 +39,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Docker build
         run: docker build -t siglog-customer:ci .
+      - name: Smoke test da imagem (dependências de produção)
+        # Pega o que os testes não pegam: módulo importado em produção mas ausente do requirements.txt.
+        run: |
+          docker run --rm siglog-customer:ci python -c "import src.api.main, src.infrastructure.outbox_publisher; print('imports ok')"
       - name: Trivy scan (imagem)
         # Container oficial do Trivy (evita depender de versão/tag de action).
         # Troque --exit-code para 1 quando o time quiser bloquear o pipeline em CRITICAL/HIGH.

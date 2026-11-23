@@ -54,9 +54,20 @@ async def publish_pending(session: Session, publish: Publish, batch: int = 50) -
     return len(done)
 
 
+async def connect_with_retry(delay: float = 3.0):
+    """O healthcheck do RabbitMQ pode ficar verde antes da porta AMQP aceitar conexões."""
+    while True:
+        try:
+            return await aio_pika.connect_robust(settings.rabbitmq_url)
+        except Exception as exc:  # noqa: BLE001
+            log.warning(json.dumps({"service": settings.service_name, "event": "rabbitmq_unavailable",
+                                    "level": "WARNING", "detail": repr(exc)[:200]}))
+            await asyncio.sleep(delay)
+
+
 async def main() -> None:
     start_http_server(settings.worker_metrics_port)
-    connection = await aio_pika.connect_robust(settings.rabbitmq_url)
+    connection = await connect_with_retry()
     async with connection:
         channel = await connection.channel()
         exchange = await channel.declare_exchange(settings.events_exchange, aio_pika.ExchangeType.TOPIC, durable=True)

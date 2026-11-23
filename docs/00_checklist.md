@@ -56,6 +56,13 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 ## Revisão do PR #1
 - [x] 9 achados do code-review corrigidos (commit antes da resposta, label de métricas, corrida 409, JWT com exp, worker resiliente, transições de status, CD após CI, portas em localhost, worker sem bloquear o loop)
 
+## Validação no Docker (VS Code, 23/11)
+- [x] Build, migrate (0001, 9 tabelas), Postgres, RabbitMQ, Prometheus, Grafana e Jaeger no ar
+- [x] Fluxo cliente → cotação → pedido, RN02 (403) e RN07 (422) confirmados; Outbox publicou 3 eventos no exchange `siglog.events`
+- [x] Corrigido: `httpx` movido para `requirements.txt` (a API caía em loop na imagem); worker com retry na conexão inicial; smoke test da imagem no CI
+- [ ] 👤 Reconstruir (`docker compose up -d --build`) e conferir API *healthy*, alvo do Prometheus *up* e dashboard do Grafana (login `admin` / `GRAFANA_ADMIN_PASSWORD` do `.env`, padrão `admin_dev`)
+- [ ] Criar fila ligada ao exchange para provar a entrega dos eventos (hoje só há publicação)
+
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)
 - [ ] Release Candidate (congelamento)
