@@ -36,3 +36,13 @@ Nenhum token, senha ou chave foi impresso ou registrado.
 - CONFIRMADO: `npm install` e `npm run dev` (Vite 5.4, Node 24); `http://localhost:5173` responde 200 e o proxy `/api/health` responde 200.
 - CONFIRMADO: `GET /me` com token real do Supabase: `cliente@exemplo.com` → 200, `role = cliente`; `atendimento@exemplo.com` → 200, `role = atendente`. Resultado igual direto na API (`:8000`) e pelo proxy do front (`:5173/api/me`).
 - NÃO VERIFICADO: telas do front no navegador (login, cotação, pedidos, chamados, sinistros, atendimento); o teste foi só de HTTP.
+
+### Rodada 3 — telas do front no navegador
+Chrome headless (puppeteer-core, instalado fora do repositório), login real pela tela em `http://localhost:5173`, API com Supabase. Sem tokens, senhas ou chaves no registro.
+- CONFIRMADO: login pela tela com `cliente@exemplo.com` e `atendimento@exemplo.com` leva a `/` ("Olá, Cliente" / "Painel da equipe").
+- CONFIRMADO (cliente): `/`, `/cotacao`, `/pedidos`, `/chamados`, `/chamados/novo`, `/sinistros`, `/sinistros/novo` carregam com o título esperado, sem erro de console e sem resposta HTTP 4xx/5xx.
+- CONFIRMADO (atendente): `/`, `/pedidos`, `/chamados`, `/sinistros`, `/atendimento` ("Fila de atendimento") carregam sem erros. O menu muda por perfil: só a equipe vê "Atendimento".
+- CONFIRMADO (RN02 na UI): o cliente que abre `/atendimento` é redirecionado para `/`.
+- OBSERVAÇÃO: `/cadastro` redireciona o cliente para `/` (ele já tem cadastro, criado na rodada anterior).
+- NÃO VERIFICADO: `/pedidos/:id`, porque o banco Supabase ainda não tem pedidos (listas vazias); ações que gravam (calcular cotação, confirmar pedido, abrir chamado/sinistro, mudar status); chamado e sinistro com dados.
+- FALHOU (intermitente, causa NÃO provada): em 3 execuções seguidas, logo após o login do cliente o `GET /api/me` voltou **401** e o front deslogou (voltou a `/login` sem mensagem). Depois disso o mesmo fluxo passou em todas as tentativas (30 chamadas seguidas com um token e 8 logins com chamada imediata, todas 200). Também houve um 401 isolado por curl no atendente. Descartado: relógio (host, container e `iat` coerentes) e instabilidade do JWKS (30 de 30 respostas 200, máx. 0,45 s). Hipótese aberta: renovação do cache do JWKS (300 s) no PyJWT. Para o Claude da nuvem investigar; a API só loga "401 Unauthorized" e não registra a exceção.
