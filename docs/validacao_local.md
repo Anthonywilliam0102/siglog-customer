@@ -106,3 +106,58 @@ Só respostas bem-sucedidas: normal média 4,69 s / p95 31,22 s / p99 31,33 s; p
 
 ### Estado ao final
 Stack de volta ao Supabase, API *healthy*, contagens do Supabase iguais às de depois do seed (a carga não o tocou). Postgres local parado. Vite rodando em `localhost:5173`.
+
+## 2026-11-27 — Rodada 6 (stack LOCAL completa) — código `92c2d41`
+
+Atenção ao ambiente: o `.env` desta máquina aponta `DATABASE_URL` para o **Supabase**. Para não gravar em produção, as tarefas abaixo usaram um override temporário **fora do repositório** que força o Postgres local em `api`, `worker` e `migrate` (host conferido: `postgres`).
+
+### 1. Ambiente local — CONFIRMADO
+`.env` já existia (não foi sobrescrito). `docker compose ... up -d --build` + `ps -a`: `api` healthy (0 reinícios), `worker` de pé, `migrate` Exited (0). `logs migrate` não imprime nada; conferido no banco: `alembic_version=0004`, tabelas incluem `integration_settings` e `api_keys`.
+
+### 2. Suíte — FALHOU nesta máquina (90/91), por causa do `.env` local
+- `ruff check .`: `All checks passed!`
+- `pytest`: `1 failed, 90 passed` — `test_rastreamento_indisponivel_retorna_503`.
+- `TRACKING_MOCK=false OTEL_EXPORTER_OTLP_ENDPOINT= pytest`: `91 passed`.
+- Defeito: o teste não é isolado; `Settings` lê o `.env` (aqui com `TRACKING_MOCK=true`). O `.env` também faz o OTel tentar exportar para `jaeger` fora do Docker (ruído e `I/O operation on closed file` no fim da saída).
+
+### 3. Chave de API (API local, token de equipe de `gen_token.py`) — CONFIRMADO
+`POST /settings/api-keys` 201 (prefixo `sk_3yB_T…`).
+- (a) `GET /orders` 200 e `GET /orders/{id}` 200 com `X-API-Key`.
+- (b) `PATCH /orders/{id}/status` com a chave: 401. Também 401 em `GET /tickets`, `/claims`, `/customers`, `/settings/api-keys`; cliente tentando emitir chave: 403.
+- (c) Após `DELETE` (200): `GET /orders` e `/orders/{id}` 401.
+- (d) `GET /settings/api-keys` não contém a chave completa; no banco só o hash (64 caracteres).
+
+### 4. Eventos no RabbitMQ — CONFIRMADO
+Cliente, cotação, pedido e chamado criados pela API com `scripts/consumir_eventos.py --fila teste-vscode --chave "customer.#"` aguardando: chegaram `CotacaoSolicitada`, `PedidoCriado`, `ChamadoAberto`.
+Reentrega (`published_at=NULL` nos 3 registros; worker republicou os mesmos `event_id`): `duplicado, ignorando …` nos três; `Total recebido: 3`.
+Outbox: os 3 registros com `publicado` preenchido; total 160, pendentes 0. Fila de teste apagada (vazia).
+Limite: a deduplicação do script de exemplo é só em memória; não sobrevive a um reinício do consumidor.
+
+### 5. K6 (API local, rede do Compose, `BASE_URL=http://api:8000`, 60 s por cenário) — FALHOU
+
+| Execução | VUs máx. | req/s | média | p95 | p99 | erros | descartadas | thresholds |
+|---|---|---|---|---|---|---|---|---|
+| normal (1ª) | 100 | 100,0 (6000 req) | 166 ms | 532 ms | 803 ms | 0,00% | 0 | só p95<500 ms falhou |
+| pico | 1000 | 12,2 (1097 req) | 53,56 s | 60 s | 60 s | 90,33% | 28858 | os três falharam |
+| normal (2ª, após reiniciar a API) | 200 | 11,4 (1030 req) | 10,15 s | 60 s | 60 s | 15,53% | 4905 | os três falharam |
+
+Extremo não executado (não pedido).
+- **Crítico (continua):** `QueuePool limit of size 5 overflow 10 reached` (389 ocorrências no pico, 139 na 2ª normal). Durante o travamento: 15 conexões `idle in transaction` (o pool inteiro) e `/health` sem resposta.
+- Após o pico a API **não se recuperou** em cerca de 4 min de observação; precisou `docker restart`. Após a 2ª normal voltou sozinha em cerca de 2 min.
+- O cenário normal é **instável**: passou sem erros numa execução e travou na outra. Causa da diferença não investigada.
+- `src/infrastructure/db.py` não mudou desde a rodada 5.
+
+### 6. Observabilidade — CONFIRMADO com ressalvas
+- Jaeger: serviço `siglog-customer`, traces com `GET /customers/{customer_id}` e spans de SQL.
+- Grafana: dashboard provisionado; consultas dos 13 painéis (via API do Grafana, última 1 h) retornam séries; telas não conferidas visualmente nesta rodada.
+- Logo após o K6, no banco local: **Sinistros por status** vazio; **Satisfação média** e **Total de avaliações** em 0 (o K6 só cria cotações e lê cliente). O histórico de 1 h mostrava valores de quando a API apontava para o Supabase.
+- Depois de criar 1 sinistro e 1 avaliação fictícios no banco local: `siglog_claims REGISTRADO=1`, `siglog_satisfaction_avg=4`, `siglog_feedback_total=1` (Prometheus). CONFIRMADO.
+- **Não existe painel de pedidos** no dashboard (nenhuma métrica `siglog_orders`).
+
+### 7 e 8. E2E e seed no Supabase (produção) — NÃO VERIFICADO (aguardando OK do usuário)
+Só leitura na API publicada: `/health` 200; hoje há 1 cliente, 12 pedidos, 8 chamados e 7 sinistros, **incluindo os dados do `seed_demo` rodado em 26/11**. Rodar o seed de novo duplicaria.
+`portal.e2e.cjs` gera uma chave de API ("Integração E2E do WMS") e não a revoga; revogar manualmente depois.
+`npm install` em `tests/e2e`: sem mudança no `package-lock.json`.
+
+### Estado ao final
+Stack local ainda apontando para o **Postgres local** (não voltou ao Supabase).
