@@ -125,6 +125,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Integrações com uma aba por squad (campo de chave de API em todas), aba **Nossa API** (chaves emitidas por nós, só leitura de pedidos, hash no banco, migração 0004) (27/11)
 - [x] **Fale conosco**: botão flutuante com headset, assistente automático (regras fixas, com dados reais do pedido) e chat do chamado com resposta automática de recebimento e atualização a cada 8 s
 - [x] Origem/destino com lista das 27 capitais (filtra ao digitar; aceita outra cidade)
+- [x] **Validação local (27/11, Claude do VS Code):** migrações até 0004, Nossa API (200/401/revogação), eventos no RabbitMQ sem duplicar, traces no Jaeger. **K6 FALHOU:** com 500 req/s o pool de conexões (5+10, espera de 30 s) esgotou e a API travou. Correção (27/11): pool configurável (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`=5 s) e resposta **503 + Retry-After** quando não há conexão livre. K6 local (rodada 7): normal 100 req/s OK (p95 285 ms, 0% erro); pico 500 req/s reprovado (503 lentas e `/health` sem resposta por ~2 min, mas a API volta sozinha). Causa provável: fila de threads antes do pool. Correção 2 (27/11): limite de requisições em andamento (`MAX_REQUISICOES_EM_ANDAMENTO`=64, 503 imediato), `/health` assíncrono e `WEB_CONCURRENCY`. 👤 Refazer o pico e registrar em `docs/13_load_test.md`
+- [ ] 👤 Pendências da validação: painel de pedidos no Grafana (não existe), E2E no Supabase (decisão do usuário), compose puro apontando para o Supabase por causa do `.env` local
 - [ ] Consumo de eventos (WMS e Financeiro) — depende dos contratos oficiais
 - [ ] Release Candidate (congelamento)
 - [ ] Release v1.0.0 (tag)

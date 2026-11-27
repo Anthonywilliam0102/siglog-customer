@@ -18,7 +18,9 @@ from prometheus_client import (
     generate_latest,
 )
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
+from src.api.carga import LimiteDeRequisicoes
 from src.api.routes import router
 from src.config.settings import settings
 from src.domain.errors import DomainError
@@ -54,6 +56,14 @@ REGISTRY.register(DomainCollector(SessionLocal))
 async def domain_error_handler(request: Request, exc: DomainError):
     log_event("domain_error", level="WARNING", path=request.url.path, detail=exc.message)
     return JSONResponse(status_code=exc.status, content={"detail": exc.message})
+
+
+@app.exception_handler(PoolTimeoutError)
+async def pool_timeout_handler(request: Request, exc: PoolTimeoutError):
+    # Sem conexão livre no pool: falha rápida (o cliente tenta de novo) em vez de segurar threads e travar a API.
+    log_event("db_pool_exhausted", level="WARNING", path=request.url.path)
+    return JSONResponse({"detail": "Servidor ocupado, tente novamente em instantes"}, status_code=503,
+                        headers={"Retry-After": "2"})
 
 
 @app.exception_handler(IntegrityError)
@@ -93,10 +103,14 @@ async def metrics_middleware(request: Request, call_next):
 
 
 @app.get("/health", tags=["infra"])
-def health() -> dict:
+async def health() -> dict:  # async: não entra na fila de threads, segue respondendo sob carga
     return {"status": "ok", "service": settings.service_name}
 
 
 @app.get("/metrics", include_in_schema=False)
 def metrics() -> Response:
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+# Mais externo de todos: recusa o excesso antes de qualquer outro processamento.
+app.add_middleware(LimiteDeRequisicoes, maximo=settings.max_requisicoes_em_andamento)

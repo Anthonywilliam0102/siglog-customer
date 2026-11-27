@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
+from src.config.settings import settings
 from src.domain.rules import utcnow
 from src.infrastructure import models as m
 
@@ -118,7 +119,8 @@ def test_ticket_resolvido_nao_recebe_mensagem(client, cliente, atendente):
     assert client.post(f"/tickets/{t}/messages", json={"mensagem": "mais"}, headers=cliente).status_code == 422
 
 
-def test_rastreamento_indisponivel_retorna_503(client, cliente):
+def test_rastreamento_indisponivel_retorna_503(client, cliente, monkeypatch):
+    monkeypatch.setattr(settings, "tracking_mock", False)  # independe do .env local (o exemplo liga o mock)
     cid = _criar_cliente(client, cliente)
     _, oid = _pedido(client, cliente, cid)
     assert client.get(f"/orders/{oid}/tracking", headers=cliente).status_code == 503
@@ -164,3 +166,16 @@ def test_metricas_nao_criam_serie_por_uuid(client, cliente):
     metricas = client.get("/metrics").text
     assert oid not in metricas
     assert 'path="/orders/{order_id}"' in metricas
+
+
+def test_pool_esgotado_responde_503_rapido(client, cliente, monkeypatch):
+    from sqlalchemy.exc import TimeoutError as PoolTimeout
+
+    from src.application import services
+
+    def sem_conexao(*a, **k):
+        raise PoolTimeout("QueuePool limit reached")
+
+    monkeypatch.setattr(services, "listar_pedidos", sem_conexao)
+    r = client.get("/orders", headers=cliente)
+    assert r.status_code == 503 and r.headers["retry-after"] == "2"

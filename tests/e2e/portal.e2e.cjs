@@ -186,6 +186,9 @@ const sair = async (page) => {
   ok('equipe gera chave de API para outro squad (sk_…)', (await page.textContent('.chave-nova')).startsWith('sk_'));
   await page.waitForSelector('.lista-chaves li');
   ok('chave emitida aparece na lista', (await page.locator('.lista-chaves li').count()) >= 1);
+  await page.click('.lista-chaves li button.perigo >> nth=0'); // não deixa a chave de teste ativa (principalmente em produção)
+  await page.waitForSelector('.lista-chaves li .selo:has-text("Revogada")');
+  ok('chave de teste revogada ao final', true);
   await shot(page, '04b_configuracoes');
   await page.goto(chamadoUrl);
   await page.fill('textarea[name=mensagem]', 'Previsão: 3 dias úteis.');
