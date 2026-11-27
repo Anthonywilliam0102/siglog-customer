@@ -40,7 +40,7 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Criar o usuário atendente de verdade no padrão da equipe (hoje é `atendimento@exemplo.com`, com perfil `atendente`)
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
-- [x] Testes unitários, integração e contrato (54 testes, SQLite)
+- [x] Testes unitários, integração e contrato (67 testes, SQLite)
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
@@ -82,9 +82,28 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Correção do 401 intermitente após o login: tolerância de relógio de 30 s no JWT (causa provável: `iat` no futuro por relógio do container), motivo da falha no log e nova tentativa no front antes de deslogar — 54 testes
 - [x] Teste ponta a ponta do portal em `tests/e2e/` (17 verificações; modo Supabase ou dev)
 - [x] Configuração de publicação: `render.yaml`, `Dockerfile` com `PORT`, `scripts/start.sh`, `frontend/public/_redirects` e guia `docs/18_publicacao.md`
-- [ ] 👤 Rodar `tests/e2e` contra o Supabase real (login real; cria dados fictícios) e confirmar que o 401 sumiu
+- [x] E2E contra o Supabase real: 16/16 OK; `/me` 200 em 200 chamadas após 10 logins, sem `auth_failed` (VS Code, `8b299db`)
+- [x] **Corrigido bug no Windows:** `scripts/start.sh` chegava com CRLF na imagem e a API caía em loop (`set: Illegal option -`). Correção: `.gitattributes` (`*.sh eol=lf`), `sed` no Dockerfile e passo no CI que simula o checkout do Windows
+- [x] Redesenho do portal: login com painel de marca, hero, vidro (glassmorphism) nas superfícies de destaque, estatísticas, ícones, hover/foco, linha do tempo do pedido, skeleton, tema escuro e celular. E2E 17/17 após o redesenho
+- [ ] 👤 Reconstruir (`docker compose ... up -d --build`) e confirmar que a API sobe sem o contorno de CRLF; conferir o visual novo no navegador
 - [ ] 👤 Publicar a API no Render e o front no Cloudflare Pages (`docs/18_publicacao.md`) e testar a URL pública
-- [ ] 👤 Merge do PR #1 na `main` e entrega ao repositório do professor
+- [x] PR #1 mergeado na `main` (commit `600be1b`); CI e publicação da imagem no GHCR passaram
+- [x] Script de entrega `scripts/exportar_para_professor.sh` e guia `docs/19_entrega_professor.md` (fork + PR)
+- [ ] 👤 Entregar ao repositório do professor (fork, pasta do squad, Pull Request) — falta a URL e o padrão de pasta do professor
+
+## Integração entre squads e publicação (27/11)
+- [x] Estrutura `contracts/` (entregamos em `provided/`, recebemos em `consumed/<squad>/`) e guia `docs/20_integracao_squads.md`
+- [x] Contratos dos nossos eventos gerados do código (JSON Schema, exemplos, AsyncAPI) e testados: os eventos realmente emitidos validam contra os schemas
+- [x] Proposta de contrato do Tracking + mock Prism (`docker-compose.integracao.yml`) + teste de contrato da nossa ACL
+- [x] Consumidor de exemplo `scripts/consumir_eventos.py` para os outros squads e para provar a entrega no RabbitMQ
+- [x] **CI corrigido:** rodava só `tests/unit` (27 de 67 testes); agora roda a suíte inteira (cobertura 94%) e valida os contratos recebidos
+- [x] Publicação do front no GitHub Pages (`pages.yml`, subcaminho, variáveis) e `scripts/seed_demo.py` (dados de demonstração)
+- [ ] 👤 Pedir os contratos aos squads 01, 02, 03, 04 e 05 (mensagem pronta em `docs/20`, seção 4) e combinar RabbitMQ compartilhado
+- [ ] 👤 Rodar `scripts/consumir_eventos.py` contra o RabbitMQ e criar um pedido, para provar a entrega dos eventos
+- [x] Modo demonstração do portal (API simulada no navegador, faixa de aviso) publicado pelo GitHub Pages quando faltam as variáveis; E2E 16/16 em modo demo e 17/17 em modo real
+- [ ] 👤 Habilitar o GitHub Pages (Settings → Pages → Source: GitHub Actions) para ter a URL de demonstração
+- [ ] 👤 Para o sistema REAL: criar as 3 variáveis do Pages e publicar a API no Render (`docs/18_publicacao.md`), ou usar o túnel do Cloudflare para mostrar o sistema local
+- [ ] 👤 Popular o banco da demo: `scripts/seed_demo.py --sim`
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)

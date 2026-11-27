@@ -1297,6 +1297,10 @@ components:
           type: array
           title: Events
           default: []
+        source:
+          type: string
+          title: Source
+          default: tracking
       type: object
       required:
       - order_id

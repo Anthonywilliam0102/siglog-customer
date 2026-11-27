@@ -1,14 +1,11 @@
-import { getToken, sair } from './session.js';
+import { demoApi } from './demo.js';
+import { ApiError } from './errors.js';
+import { getToken, sair, temDemo } from './session.js';
 
 // Em dev, '/api' é redirecionado pelo Vite para a API local. Em produção use VITE_API_URL.
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
-export class ApiError extends Error {
-  constructor(message, status) {
-    super(message);
-    this.status = status;
-  }
-}
+export { ApiError };
 
 function mensagem(data, status) {
   if (typeof data?.detail === 'string') return data.detail;
@@ -28,6 +25,7 @@ async function enviar(path, method, body) {
 }
 
 export async function api(path, { method = 'GET', body } = {}) {
+  if (temDemo) return demoApi(path, { method, body }, await getToken());
   let res = await enviar(path, method, body);
   // Um 401 logo após o login pode ser só defasagem de relógio: tenta de novo antes de encerrar a sessão.
   if (res.status === 401) {

@@ -1,4 +1,5 @@
 import { STATUS_PEDIDO, STATUS_TICKET } from '../lib.js';
+import Icon from './Icons.jsx';
 
 export const Alerta = ({ tipo = 'erro', children }) =>
   children ? <div className={`alerta ${tipo}`} role={tipo === 'erro' ? 'alert' : 'status'}>{children}</div> : null;
@@ -7,8 +8,19 @@ export const Selo = ({ tom = 'info', children }) => <span className={`selo ${tom
 export const SeloPedido = ({ status }) => <Selo tom={STATUS_PEDIDO[status]?.tom}>{STATUS_PEDIDO[status]?.label ?? status}</Selo>;
 export const SeloTicket = ({ status }) => <Selo tom={STATUS_TICKET[status]?.tom}>{STATUS_TICKET[status]?.label ?? status}</Selo>;
 
-export const Carregando = ({ texto = 'Carregando…' }) => <p className="muted" aria-busy="true">{texto}</p>;
-export const Vazio = ({ children }) => <div className="vazio">{children}</div>;
+export const Carregando = ({ texto = 'Carregando…' }) => (
+  <div className="skeleton" aria-busy="true" aria-live="polite">
+    <span className="sr-only">{texto}</span>
+    <i /><i /><i />
+  </div>
+);
+
+export const Vazio = ({ children, icone = 'inbox' }) => (
+  <div className="vazio">
+    <span className="icone"><Icon nome={icone} /></span>
+    <div>{children}</div>
+  </div>
+);
 
 export function Campo({ label, ajuda, children }) {
   return (

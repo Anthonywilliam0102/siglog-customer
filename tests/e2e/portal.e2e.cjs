@@ -3,17 +3,20 @@
 // Modo Supabase (login real pela tela):
 //   set -a; . ./.env.validacao; set +a          # CLIENTE_EMAIL, CLIENTE_PW, ATENDENTE_EMAIL, ATENDENTE_PW
 //   E2E_MODE=supabase npm test
+// Modo demonstração (build com VITE_DEMO=true, sem API):  E2E_MODE=demo npm test
 // Modo desenvolvimento (token HS256 de scripts/gen_token.py; API com JWT_SECRET):
 //   E2E_MODE=dev E2E_TOKEN_CLIENTE=... E2E_TOKEN_ATENDENTE=... npm test
-// Opcional: E2E_BASE_URL (padrão http://127.0.0.1:5173), E2E_CHANNEL=chrome (usa o Chrome instalado), E2E_SHOTS=pasta.
+// Opcional: E2E_BASE_URL (padrão http://localhost:5173), E2E_CHANNEL=chrome (usa o Chrome instalado), E2E_SHOTS=pasta.
 // Nunca imprime senhas ou tokens. Cria dados de teste (cliente fictício, pedido, chamado, sinistro).
 const { chromium } = require('playwright');
 const fs = require('fs');
 
-const BASE = process.env.E2E_BASE_URL || 'http://127.0.0.1:5173';
+const BASE = process.env.E2E_BASE_URL || 'http://localhost:5173';
 const MODE = process.env.E2E_MODE || 'supabase';
 const SHOTS = process.env.E2E_SHOTS || '';
 const resultados = [];
+let paginaAtual = null; // para o print de diagnóstico em caso de falha
+const errosDePagina = [];
 const ok = (nome, cond, extra = '') => resultados.push([cond ? 'OK   ' : 'FALHA', nome, cond ? '' : extra]);
 
 function cnpjValido() {
@@ -27,23 +30,29 @@ const exigir = (nome) => { if (!process.env[nome]) { console.error(`Variável ${
 const shot = async (page, nome) => { if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: `${SHOTS}/${nome}.png` }); } };
 
 async function entrar(page, quem) {
-  await page.goto(`${BASE}/login`);
-  if (MODE === 'dev') {
+  if (!page.url().endsWith('/login')) await page.goto(`${BASE}/login`);
+  await page.waitForSelector('main.login-pagina');
+  if (MODE === 'demo') {
+    await page.click(`button:has-text("Entrar como ${quem}")`);
+  } else if (MODE === 'dev') {
     await page.fill('textarea[name=token]', exigir(`E2E_TOKEN_${quem.toUpperCase()}`));
   } else {
     await page.fill('input[name=email]', exigir(`${quem.toUpperCase()}_EMAIL`));
     await page.fill('input[name=senha]', exigir(`${quem.toUpperCase()}_PW`));
   }
-  await page.click('button.primario');
+  if (MODE !== 'demo') await page.click('button.primario'); // no modo demonstração o clique já foi dado acima
   await page.waitForFunction(() => !location.pathname.startsWith('/login'), null, { timeout: 15000 });
-  await page.waitForLoadState('networkidle');
+  // espera o perfil carregar no topo (evita agir com a sessão anterior ainda na tela)
+  await page.waitForSelector(`.usuario .muted:has-text("${quem}")`, { timeout: 15000 });
+  await page.waitForSelector('nav[aria-label="Principal"]');
 }
 const sair = async (page) => { await page.click('button.link'); await page.waitForURL('**/login'); };
 
 (async () => {
   const browser = await chromium.launch(process.env.E2E_CHANNEL ? { channel: process.env.E2E_CHANNEL } : {});
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
-  const erros = [];
+  paginaAtual = page;
+  const erros = errosDePagina;
   page.on('pageerror', (e) => erros.push(`pageerror: ${e.message}`));
   page.on('response', (r) => { if (r.url().includes('/api/') && r.status() >= 500) erros.push(`HTTP ${r.status()} ${r.url()}`); });
 
@@ -109,8 +118,10 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   await entrar(page, 'atendente');
   ok('atendente entra sem cadastro', page.url() === `${BASE}/`, page.url());
   await page.goto(`${BASE}/atendimento`);
+  await page.waitForSelector('h1:has-text("Fila de atendimento")');
   await page.waitForSelector('table');
-  ok('fila mostra o chamado do cliente', (await page.textContent('table')).includes('Previsão de entrega (E2E)'));
+  const tabela = await page.textContent('table');
+  ok('fila mostra o chamado do cliente', tabela.includes('Previsão de entrega (E2E)'), tabela.slice(0, 300));
   await shot(page, '04_fila');
   await page.goto(chamadoUrl);
   await page.fill('textarea[name=mensagem]', 'Previsão: 3 dias úteis.');
@@ -150,4 +161,11 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   const falhas = resultados.filter((r) => r[0] === 'FALHA').length;
   console.log(`\n${resultados.length - falhas}/${resultados.length} verificações OK`);
   process.exit(falhas ? 1 : 0);
-})().catch((e) => { console.error('ERRO NO TESTE:', e.message); process.exit(1); });
+})().catch(async (e) => {
+  if (SHOTS && paginaAtual) { fs.mkdirSync(SHOTS, { recursive: true }); await paginaAtual.screenshot({ path: `${SHOTS}/erro.png` }).catch(() => {}); console.log('URL na falha:', paginaAtual.url()); console.log('Texto na tela:', (await paginaAtual.evaluate(() => document.body.innerText).catch(() => '')).slice(0, 200).replace(/\n/g, ' | ')); console.log('Papel guardado:', await paginaAtual.evaluate(() => sessionStorage.getItem('siglog_demo_papel')).catch(() => '?'));
+    console.log('Erros de página:', errosDePagina.join(' || ') || 'nenhum'); }
+  for (const [st, n, ex] of resultados) console.log(st, n, ex ? `(${ex})` : "");
+  console.error('ERRO NO TESTE (depois do último OK acima):', e.message.split('\n')[0]);
+  process.exit(1);
+});
+// dica: rode com E2E_SHOTS=pasta para ver os prints dos passos anteriores à falha

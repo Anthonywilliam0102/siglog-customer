@@ -8,6 +8,8 @@ export const temSupabase = Boolean(url && key);
 export const supabase = temSupabase ? createClient(url, key) : null;
 
 const DEV = 'siglog_dev_token';
+const DEMO = 'siglog_demo_papel';
+export const temDemo = import.meta.env.VITE_DEMO === 'true';
 const guardar = {
   ler: () => { try { return sessionStorage.getItem(DEV); } catch { return null; } },
   gravar: (v) => { try { sessionStorage.setItem(DEV, v); } catch { /* sem storage */ } },
@@ -15,6 +17,7 @@ const guardar = {
 };
 
 export async function getToken() {
+  if (temDemo) { try { const p = sessionStorage.getItem(DEMO); return p ? `demo:${p}` : null; } catch { return null; } }
   if (supabase) {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
@@ -35,7 +38,13 @@ export function entrarComTokenDev(token) {
   window.dispatchEvent(new Event('siglog:sessao'));
 }
 
+export function entrarDemo(papel) {
+  try { sessionStorage.setItem(DEMO, papel); } catch { /* sem storage */ }
+  window.dispatchEvent(new Event('siglog:sessao'));
+}
+
 export async function sair() {
+  try { sessionStorage.removeItem(DEMO); } catch { /* sem storage */ }
   if (supabase) await supabase.auth.signOut();
   guardar.limpar();
   window.dispatchEvent(new Event('siglog:sessao'));

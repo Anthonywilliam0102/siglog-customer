@@ -15,8 +15,10 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - name: Lint
         run: ruff check .
-      - name: Unit tests
-        run: pytest tests/unit --cov=src --cov-report=xml
+      - name: Contratos recebidos dos outros squads
+        run: python scripts/validar_contratos.py
+      - name: Testes (unit, integration, contract)
+        run: pytest --cov=src --cov-report=xml   # suíte completa: unit, integration e contract
       - uses: actions/upload-artifact@v4
         with: { name: coverage, path: coverage.xml }
 
@@ -37,6 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Simular checkout do Windows (CRLF no start.sh)
+        # Em Windows com core.autocrlf=true o script chega com CRLF; a imagem precisa suportar isso.
+        run: sed -i 's/$/\r/' scripts/start.sh && file scripts/start.sh
       - name: Docker build
         run: docker build -t siglog-customer:ci .
       - name: Smoke test da imagem (dependências de produção)

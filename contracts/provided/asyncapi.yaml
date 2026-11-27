@@ -1,0 +1,392 @@
+asyncapi: 2.6.0
+info:
+  title: SIG-Log Customer — eventos publicados
+  version: 1.0.0
+  description: 'Exchange topic `siglog.events` (durável). Entrega at-least-once via
+    Outbox: deduplique por `event_id`.'
+servers:
+  broker:
+    url: ${RABBITMQ_URL}
+    protocol: amqp
+    description: RabbitMQ compartilhado entre os squads
+channels:
+  customer.cotacao.solicitada:
+    description: 'Cliente pediu uma cotação. Consumidor típico: Financeiro (opcional).'
+    subscribe:
+      operationId: consumirCotacaoSolicitada
+      message:
+        name: CotacaoSolicitada
+        contentType: application/json
+        payload:
+          $schema: https://json-schema.org/draft/2020-12/schema
+          $id: https://siglog.local/contracts/customer/CotacaoSolicitada.schema.json
+          title: CotacaoSolicitada
+          description: 'Cliente pediu uma cotação. Consumidor típico: Financeiro (opcional).'
+          type: object
+          required:
+          - event_id
+          - event_type
+          - version
+          - occurred_at
+          - producer
+          - correlation_id
+          - data
+          additionalProperties: false
+          properties:
+            event_id:
+              type: string
+              format: uuid
+              description: Identificador único. Consumidores devem deduplicar por
+                este campo (entrega at-least-once).
+            event_type:
+              const: CotacaoSolicitada
+            version:
+              const: 1
+            occurred_at:
+              type: string
+              format: date-time
+            producer:
+              const: siglog-customer
+            correlation_id:
+              type: string
+              format: uuid
+              description: Propague nos seus eventos/logs para rastrear o fluxo entre
+                squads.
+            data:
+              type: object
+              properties:
+                cotacao_id: &id001
+                  type: string
+                  format: uuid
+                cliente_id: *id001
+                origem:
+                  type: string
+                destino:
+                  type: string
+                peso_kg:
+                  type: number
+                volume_m3:
+                  type: number
+              required:
+              - cotacao_id
+              - cliente_id
+              - origem
+              - destino
+              - peso_kg
+              - volume_m3
+              additionalProperties: false
+  customer.pedido.criado:
+    description: 'Pedido criado a partir de uma cotação válida. Consumidores: WMS
+      (iniciar separação) e Financeiro (frete e cobrança).'
+    subscribe:
+      operationId: consumirPedidoCriado
+      message:
+        name: PedidoCriado
+        contentType: application/json
+        payload:
+          $schema: https://json-schema.org/draft/2020-12/schema
+          $id: https://siglog.local/contracts/customer/PedidoCriado.schema.json
+          title: PedidoCriado
+          description: 'Pedido criado a partir de uma cotação válida. Consumidores:
+            WMS (iniciar separação) e Financeiro (frete e cobrança).'
+          type: object
+          required:
+          - event_id
+          - event_type
+          - version
+          - occurred_at
+          - producer
+          - correlation_id
+          - data
+          additionalProperties: false
+          properties:
+            event_id:
+              type: string
+              format: uuid
+              description: Identificador único. Consumidores devem deduplicar por
+                este campo (entrega at-least-once).
+            event_type:
+              const: PedidoCriado
+            version:
+              const: 1
+            occurred_at:
+              type: string
+              format: date-time
+            producer:
+              const: siglog-customer
+            correlation_id:
+              type: string
+              format: uuid
+              description: Propague nos seus eventos/logs para rastrear o fluxo entre
+                squads.
+            data:
+              type: object
+              properties:
+                pedido_id: *id001
+                cliente_id: *id001
+                cotacao_id: *id001
+                origem:
+                  type: string
+                destino:
+                  type: string
+                carga:
+                  type: object
+                  properties:
+                    peso_kg:
+                      type: number
+                    volume_m3:
+                      type: number
+                  required:
+                  - peso_kg
+                  - volume_m3
+                  additionalProperties: false
+                valor_estimado: &id002
+                  type: string
+                  pattern: ^\d+(\.\d+)?$
+                  description: 'valor monetário como texto decimal (ex.: "290.40")'
+              required:
+              - pedido_id
+              - cliente_id
+              - cotacao_id
+              - origem
+              - destino
+              - carga
+              - valor_estimado
+              additionalProperties: false
+  customer.chamado.aberto:
+    description: Chamado de atendimento aberto no SAC (indicadores).
+    subscribe:
+      operationId: consumirChamadoAberto
+      message:
+        name: ChamadoAberto
+        contentType: application/json
+        payload:
+          $schema: https://json-schema.org/draft/2020-12/schema
+          $id: https://siglog.local/contracts/customer/ChamadoAberto.schema.json
+          title: ChamadoAberto
+          description: Chamado de atendimento aberto no SAC (indicadores).
+          type: object
+          required:
+          - event_id
+          - event_type
+          - version
+          - occurred_at
+          - producer
+          - correlation_id
+          - data
+          additionalProperties: false
+          properties:
+            event_id:
+              type: string
+              format: uuid
+              description: Identificador único. Consumidores devem deduplicar por
+                este campo (entrega at-least-once).
+            event_type:
+              const: ChamadoAberto
+            version:
+              const: 1
+            occurred_at:
+              type: string
+              format: date-time
+            producer:
+              const: siglog-customer
+            correlation_id:
+              type: string
+              format: uuid
+              description: Propague nos seus eventos/logs para rastrear o fluxo entre
+                squads.
+            data:
+              type: object
+              properties:
+                ticket_id: *id001
+                cliente_id: *id001
+                pedido_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                categoria:
+                  type: string
+                prioridade:
+                  enum:
+                  - ALTA
+                  - MEDIA
+                  - BAIXA
+              required:
+              - ticket_id
+              - cliente_id
+              - pedido_id
+              - categoria
+              - prioridade
+              additionalProperties: false
+  customer.sinistro.registrado:
+    description: 'Avaria, extravio ou ocorrência registrada. Consumidor: Financeiro
+      (estorno e indenização).'
+    subscribe:
+      operationId: consumirSinistroRegistrado
+      message:
+        name: SinistroRegistrado
+        contentType: application/json
+        payload:
+          $schema: https://json-schema.org/draft/2020-12/schema
+          $id: https://siglog.local/contracts/customer/SinistroRegistrado.schema.json
+          title: SinistroRegistrado
+          description: 'Avaria, extravio ou ocorrência registrada. Consumidor: Financeiro
+            (estorno e indenização).'
+          type: object
+          required:
+          - event_id
+          - event_type
+          - version
+          - occurred_at
+          - producer
+          - correlation_id
+          - data
+          additionalProperties: false
+          properties:
+            event_id:
+              type: string
+              format: uuid
+              description: Identificador único. Consumidores devem deduplicar por
+                este campo (entrega at-least-once).
+            event_type:
+              const: SinistroRegistrado
+            version:
+              const: 1
+            occurred_at:
+              type: string
+              format: date-time
+            producer:
+              const: siglog-customer
+            correlation_id:
+              type: string
+              format: uuid
+              description: Propague nos seus eventos/logs para rastrear o fluxo entre
+                squads.
+            data:
+              type: object
+              properties:
+                sinistro_id: *id001
+                pedido_id: *id001
+                cliente_id: *id001
+                tipo:
+                  type: string
+                valor_reclamado: *id002
+              required:
+              - sinistro_id
+              - pedido_id
+              - cliente_id
+              - tipo
+              - valor_reclamado
+              additionalProperties: false
+  customer.entrega.avaliada:
+    description: Cliente avaliou a entrega (indicadores de Frota e Tracking).
+    subscribe:
+      operationId: consumirEntregaAvaliada
+      message:
+        name: EntregaAvaliada
+        contentType: application/json
+        payload:
+          $schema: https://json-schema.org/draft/2020-12/schema
+          $id: https://siglog.local/contracts/customer/EntregaAvaliada.schema.json
+          title: EntregaAvaliada
+          description: Cliente avaliou a entrega (indicadores de Frota e Tracking).
+          type: object
+          required:
+          - event_id
+          - event_type
+          - version
+          - occurred_at
+          - producer
+          - correlation_id
+          - data
+          additionalProperties: false
+          properties:
+            event_id:
+              type: string
+              format: uuid
+              description: Identificador único. Consumidores devem deduplicar por
+                este campo (entrega at-least-once).
+            event_type:
+              const: EntregaAvaliada
+            version:
+              const: 1
+            occurred_at:
+              type: string
+              format: date-time
+            producer:
+              const: siglog-customer
+            correlation_id:
+              type: string
+              format: uuid
+              description: Propague nos seus eventos/logs para rastrear o fluxo entre
+                squads.
+            data:
+              type: object
+              properties:
+                pedido_id: *id001
+                cliente_id: *id001
+                nota:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+              required:
+              - pedido_id
+              - cliente_id
+              - nota
+              additionalProperties: false
+  customer.cliente.notificado:
+    description: Notificação enviada ao cliente (auditoria).
+    subscribe:
+      operationId: consumirClienteNotificado
+      message:
+        name: ClienteNotificado
+        contentType: application/json
+        payload:
+          $schema: https://json-schema.org/draft/2020-12/schema
+          $id: https://siglog.local/contracts/customer/ClienteNotificado.schema.json
+          title: ClienteNotificado
+          description: Notificação enviada ao cliente (auditoria).
+          type: object
+          required:
+          - event_id
+          - event_type
+          - version
+          - occurred_at
+          - producer
+          - correlation_id
+          - data
+          additionalProperties: false
+          properties:
+            event_id:
+              type: string
+              format: uuid
+              description: Identificador único. Consumidores devem deduplicar por
+                este campo (entrega at-least-once).
+            event_type:
+              const: ClienteNotificado
+            version:
+              const: 1
+            occurred_at:
+              type: string
+              format: date-time
+            producer:
+              const: siglog-customer
+            correlation_id:
+              type: string
+              format: uuid
+              description: Propague nos seus eventos/logs para rastrear o fluxo entre
+                squads.
+            data:
+              type: object
+              properties:
+                cliente_id: *id001
+                canal:
+                  type: string
+                motivo:
+                  type: string
+              required:
+              - cliente_id
+              - canal
+              - motivo
+              additionalProperties: false

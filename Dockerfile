@@ -8,6 +8,8 @@ COPY src ./src
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY scripts/start.sh ./start.sh
+# Checkout no Windows pode gravar CRLF: remove o \r para o `sh` do container não falhar (set: Illegal option -).
+RUN sed -i 's/\r$//' /app/start.sh
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 \

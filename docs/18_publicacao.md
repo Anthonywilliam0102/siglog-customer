@@ -16,16 +16,35 @@ Segredos só nos painéis (nunca no repositório). Todos os passos abaixo são f
 - O banco já está migrado (Alembic 0002). Se criar um banco novo, defina `RUN_MIGRATIONS=true` uma vez.
 - Não há RabbitMQ nem worker na nuvem: os eventos ficam no Outbox (tabela `outbox_events`). O fluxo do portal funciona normalmente; a publicação no RabbitMQ é mostrada na demo local.
 
-### 2. Front no Cloudflare Pages
+### 2A. Front no GitHub Pages (recomendado: sem conta nova, publica sozinho a cada push na `main`)
+**Atalho para ter uma URL em minutos:** só habilite o Pages (passo 1 abaixo). Sem as variáveis, o workflow publica o **modo demonstração**: o portal completo com dados fictícios simulados no navegador, com uma faixa de aviso "Modo demonstração" em todas as telas. Não é o sistema real, mas serve para mostrar o visual e os fluxos; quando criar as variáveis (passo 2) e rodar de novo, ele passa a usar a API e o Supabase de verdade.
+1. No repositório: **Settings → Pages → Build and deployment → Source: GitHub Actions** (uma vez só).
+2. **Settings → Secrets and variables → Actions → aba Variables → New repository variable**, três variáveis:
+   `VITE_API_URL` (URL da API do passo 1, sem barra no fim), `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` (chave **publishable**; nunca a secret).
+3. **Actions → "Publicar portal (GitHub Pages)" → Run workflow** (ou faça um push em `frontend/`). O endereço será `https://<usuario>.github.io/<repositorio>/` (aparece no fim do job).
+4. Se alguma das três variáveis faltar, o workflow publica o modo demonstração (e avisa no log); só com as três ele publica o sistema real.
+
+### 2B. Front no Cloudflare Pages (alternativa)
 1. Cloudflare → **Workers & Pages → Create → Pages → Connect to Git** → repositório → branch `main`.
 2. Configuração: **Root directory** `frontend` · **Build command** `npm run build` · **Build output** `dist`.
 3. Variáveis de ambiente (build): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (chave **publishable**, nunca a secret), `VITE_API_URL` = URL da API do passo 1 (sem barra no fim), `NODE_VERSION` = `22`.
 4. Anote a URL `https://<projeto>.pages.dev`. O `frontend/public/_redirects` já cuida das rotas do React.
 
 ### 3. Ligar os dois
-- No Render, defina `CORS_ORIGINS` = a URL do Pages (exata, sem barra) e salve (a API reinicia).
-- No Supabase, **Authentication → URL Configuration → Site URL** = a URL do Pages.
+- No Render, defina `CORS_ORIGINS` = **só a origem** do front, sem caminho e sem barra (GitHub Pages: `https://<usuario>.github.io`; Cloudflare: `https://<projeto>.pages.dev`) e salve (a API reinicia).
+- No Supabase, **Authentication → URL Configuration → Site URL** = a URL completa do front.
 - Teste: abra a URL do Pages, entre com o cliente e faça uma cotação.
+
+## URL do sistema REAL agora, a partir do seu computador (Cloudflare Tunnel)
+Expõe o sistema que está rodando na sua máquina (banco no Supabase) numa URL pública temporária, sem conta no Cloudflare:
+```bash
+winget install Cloudflare.cloudflared            # uma vez (PowerShell/Git Bash)
+docker compose -f docker-compose.yml -f docker-compose.supabase.yml up -d --build
+cd frontend && npm run dev                       # em outro terminal; http://localhost:5173
+cloudflared tunnel --url http://localhost:5173   # imprime https://<nome>.trycloudflare.com
+```
+Uma única URL serve o portal e a API (o Vite faz o proxy de `/api`). A URL muda a cada execução, vale só enquanto o computador e o comando estiverem ligados, e **qualquer pessoa com o link consegue abrir a tela de login**: use para demonstrar e feche depois (Ctrl+C).
+Para algo permanente com domínio seu no Cloudflare existe o *named tunnel* (exige conta e um domínio na conta). O Cloudflare **não hospeda** a API Python: a API precisa do Render (ou de um túnel como este).
 
 ## Plano B (se a hospedagem falhar ou o plano gratuito mudar): local + túnel
 Roda tudo no notebook de quem apresenta e expõe **uma** URL pública:
@@ -47,5 +66,6 @@ Instalar o `cloudflared`: `winget install Cloudflare.cloudflared`. A URL muda a 
 | Item | Situação |
 |---|---|
 | `render.yaml`, `Dockerfile` (PORT), `start.sh`, `_redirects` | CONFIRMADO no código; a imagem sobe na porta de `PORT` (smoke test no CI) |
-| API no Render, front no Pages, CORS e URL do Supabase | **NÃO VERIFICADO** (dependem das contas do time) |
+| `pages.yml` (GitHub Pages) e o front sob subcaminho `/<repositorio>/` | build e roteamento testados localmente; **o deploy em si NÃO VERIFICADO** (precisa habilitar o Pages e criar as variáveis) |
+| API no Render, CORS e URL do Supabase | **NÃO VERIFICADO** (dependem da conta do time) |
 | Limites do plano gratuito do Render e do Pages | **NÃO VERIFICADO** (podem ter mudado; confira nos painéis) |

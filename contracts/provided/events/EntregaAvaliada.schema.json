@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siglog.local/contracts/customer/EntregaAvaliada.schema.json",
+  "title": "EntregaAvaliada",
+  "description": "Cliente avaliou a entrega (indicadores de Frota e Tracking).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único. Consumidores devem deduplicar por este campo (entrega at-least-once)."
+    },
+    "event_type": {
+      "const": "EntregaAvaliada"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "siglog-customer"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Propague nos seus eventos/logs para rastrear o fluxo entre squads."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "pedido_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "cliente_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "nota": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "pedido_id",
+        "cliente_id",
+        "nota"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siglog.local/contracts/customer/PedidoCriado.schema.json",
+  "title": "PedidoCriado",
+  "description": "Pedido criado a partir de uma cotação válida. Consumidores: WMS (iniciar separação) e Financeiro (frete e cobrança).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único. Consumidores devem deduplicar por este campo (entrega at-least-once)."
+    },
+    "event_type": {
+      "const": "PedidoCriado"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "siglog-customer"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Propague nos seus eventos/logs para rastrear o fluxo entre squads."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "pedido_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "cliente_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "cotacao_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origem": {
+          "type": "string"
+        },
+        "destino": {
+          "type": "string"
+        },
+        "carga": {
+          "type": "object",
+          "properties": {
+            "peso_kg": {
+              "type": "number"
+            },
+            "volume_m3": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "peso_kg",
+            "volume_m3"
+          ],
+          "additionalProperties": false
+        },
+        "valor_estimado": {
+          "type": "string",
+          "pattern": "^\\d+(\\.\\d+)?$",
+          "description": "valor monetário como texto decimal (ex.: \"290.40\")"
+        }
+      },
+      "required": [
+        "pedido_id",
+        "cliente_id",
+        "cotacao_id",
+        "origem",
+        "destino",
+        "carga",
+        "valor_estimado"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

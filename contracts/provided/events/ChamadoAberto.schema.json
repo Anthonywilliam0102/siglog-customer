@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siglog.local/contracts/customer/ChamadoAberto.schema.json",
+  "title": "ChamadoAberto",
+  "description": "Chamado de atendimento aberto no SAC (indicadores).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único. Consumidores devem deduplicar por este campo (entrega at-least-once)."
+    },
+    "event_type": {
+      "const": "ChamadoAberto"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "siglog-customer"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Propague nos seus eventos/logs para rastrear o fluxo entre squads."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "ticket_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "cliente_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "pedido_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "categoria": {
+          "type": "string"
+        },
+        "prioridade": {
+          "enum": [
+            "ALTA",
+            "MEDIA",
+            "BAIXA"
+          ]
+        }
+      },
+      "required": [
+        "ticket_id",
+        "cliente_id",
+        "pedido_id",
+        "categoria",
+        "prioridade"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

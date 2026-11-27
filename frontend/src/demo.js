@@ -1,0 +1,164 @@
+// MODO DEMONSTRAÇÃO: simula a API dentro do navegador (dados fictícios, sem servidor).
+// Ativado só em build com VITE_DEMO=true. Replica as regras do backend (RN02, RN07, SLA, cotação) para a interface se comportar igual.
+import { ApiError } from './errors.js';
+
+const CHAVE = 'siglog_demo_estado';
+const H = 36e5;
+const SLA_H = { ALTA: 4, MEDIA: 24, BAIXA: 72 };
+const PROXIMOS = { CRIADO: ['EM_SEPARACAO', 'CANCELADO'], EM_SEPARACAO: ['EM_TRANSPORTE', 'CANCELADO'], EM_TRANSPORTE: ['ENTREGUE'], ENTREGUE: [], CANCELADO: [] };
+const PASSOS = [['Coletado', 'Coletado no centro de distribuição de {o}'], ['Em trânsito', 'Em trânsito entre {o} e {d}'],
+  ['Saiu para entrega', 'Saiu para entrega em {d}'], ['Entregue', 'Entregue ao destinatário em {d}']];
+const FEITOS = { CRIADO: 0, EM_SEPARACAO: 0, EM_TRANSPORTE: 2, ENTREGUE: 4, CANCELADO: 0 };
+const ESPERA = { CRIADO: 'Aguardando separação', EM_SEPARACAO: 'Em separação no CD', CANCELADO: 'Pedido cancelado' };
+
+const uid = () => crypto.randomUUID();
+const iso = (t) => new Date(t).toISOString();
+const valor = (kg, m3) => (50 + kg * 0.8 + m3 * 120).toFixed(2);
+
+function semente() {
+  const agora = Date.now();
+  const cid = uid();
+  const clientes = [{ id: cid, owner_sub: 'demo-cliente', nome: 'Loja Horizonte Ltda', documento: '11222333000181', tipo: 'PJ', email: 'contato@horizonte.example', telefone: null, endereco: null, created_at: iso(agora - 30 * 24 * H) }];
+  const rotas = [['São Paulo/SP', 'Recife/PE', 120.5, 1.2, 'CRIADO'], ['Curitiba/PR', 'Porto Alegre/RS', 40, 0.4, 'EM_SEPARACAO'],
+    ['Belo Horizonte/MG', 'Salvador/BA', 310, 2.8, 'EM_TRANSPORTE'], ['Rio de Janeiro/RJ', 'Brasília/DF', 75, 0.9, 'ENTREGUE'], ['Manaus/AM', 'Belém/PA', 220, 2.1, 'ENTREGUE']];
+  const pedidos = rotas.map(([origem, destino, kg, m3, status], i) => ({ id: uid(), customer_id: cid, quote_id: uid(), status, origem, destino,
+    valor_estimado: valor(kg, m3), created_at: iso(agora - (i + 1) * 5 * H) }));
+  const t = (assunto, categoria, prioridade, status, pedido, horas, mensagens) => ({ id: uid(), customer_id: cid, order_id: pedido.id, categoria, prioridade, assunto, status,
+    sla_due_at: iso(agora - horas * H + SLA_H[prioridade] * H), created_at: iso(agora - horas * H), mensagens });
+  const m = (papel, texto, ago) => ({ id: uid(), author_role: papel, mensagem: texto, created_at: iso(agora - ago * H) });
+  const tickets = [
+    t('Atraso na coleta', 'ATRASO', 'ALTA', 'ABERTO', pedidos[1], 6, [m('cliente', 'A coleta prevista para hoje não aconteceu. Podem verificar?', 6)]),
+    t('Dúvida sobre cobrança', 'COBRANCA', 'MEDIA', 'EM_ATENDIMENTO', pedidos[2], 3, [m('cliente', 'Qual a data de vencimento da cobrança deste pedido?', 3), m('atendente', 'Olá! Estamos verificando com o financeiro e retornamos ainda hoje.', 2)]),
+    t('Alteração de endereço', 'OUTRO', 'BAIXA', 'RESOLVIDO', pedidos[0], 20, [m('cliente', 'Preciso alterar o endereço de entrega.', 20), m('atendente', 'Endereço atualizado conforme solicitado.', 19)]),
+  ];
+  const sinistros = [{ id: uid(), order_id: pedidos[3].id, customer_id: cid, tipo: 'AVARIA', descricao: 'Duas caixas chegaram amassadas.', valor_reclamado: '180.00', status: 'REGISTRADO', created_at: iso(agora - 2 * H) }];
+  return { clientes, cotacoes: [], pedidos, tickets, sinistros, avaliacoes: [{ target: 'ENTREGA', order_id: pedidos[3].id }] };
+}
+
+function carregar() {
+  try { const s = sessionStorage.getItem(CHAVE); if (s) return JSON.parse(s); } catch { /* sem storage */ }
+  const novo = semente();
+  salvar(novo);
+  return novo;
+}
+function salvar(e) { try { sessionStorage.setItem(CHAVE, JSON.stringify(e)); } catch { /* sem storage */ } }
+
+const SEM_ATENDENTE = 'Apenas a equipe pode alterar o status';
+const out = (o) => { const { owner_sub, ...resto } = o; return resto; }; // eslint-disable-line no-unused-vars
+
+export async function demoApi(caminho, { method = 'GET', body } = {}, token) {
+  await new Promise((r) => setTimeout(r, 120)); // sensação de rede
+  const papel = (token || '').split(':')[1];
+  if (!papel) throw new ApiError('Token ausente', 401);
+  const equipe = papel === 'atendente';
+  const e = carregar();
+  const [rota, qs = ''] = caminho.split('?');
+  const q = new URLSearchParams(qs);
+  const seg = rota.split('/').filter(Boolean);
+  const limite = Number(q.get('limit') || 50);
+  const meu = (clienteId) => equipe || e.clientes.find((c) => c.id === clienteId)?.owner_sub === 'demo-cliente';
+  const nega = () => { throw new ApiError('Acesso negado', 403); };
+  const nao = (x) => { throw new ApiError(`${x} não encontrado(a)`, 404); };
+  const ordenar = (l) => [...l].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (seg[0] === 'me') return { sub: `demo-${papel}`, role: papel };
+
+  if (seg[0] === 'customers') {
+    if (seg.length === 1 && method === 'GET') return e.clientes.filter((c) => equipe || c.owner_sub === 'demo-cliente').slice(0, limite).map(out);
+    if (seg.length === 1 && method === 'POST') {
+      if (e.clientes.some((c) => c.documento === body.documento)) throw new ApiError('Já existe cliente com este documento', 409);
+      const c = { id: uid(), owner_sub: `demo-${papel}`, ...body, created_at: iso(Date.now()) };
+      e.clientes.push(c); salvar(e); return out(c);
+    }
+    const c = e.clientes.find((x) => x.id === seg[1]); if (!c) nao('Cliente'); if (!meu(c.id)) nega(); return out(c);
+  }
+
+  if (seg[0] === 'quotes' && method === 'POST') {
+    if (!meu(body.customer_id)) nega();
+    const c = { id: uid(), customer_id: body.customer_id, origem: body.origem, destino: body.destino, peso_kg: body.peso_kg, volume_m3: body.volume_m3,
+      valor_estimado: valor(body.peso_kg, body.volume_m3), expires_at: iso(Date.now() + 24 * H), accepted: false, created_at: iso(Date.now()) };
+    e.cotacoes.push(c); salvar(e); return c;
+  }
+
+  if (seg[0] === 'orders') {
+    if (seg.length === 1 && method === 'GET') {
+      let l = e.pedidos.filter((p) => meu(p.customer_id));
+      if (q.get('status')) l = l.filter((p) => p.status === q.get('status'));
+      if (q.get('customer_id')) l = l.filter((p) => p.customer_id === q.get('customer_id'));
+      return ordenar(l).slice(0, limite);
+    }
+    if (seg.length === 1 && method === 'POST') {
+      const c = e.cotacoes.find((x) => x.id === body.quote_id); if (!c) nao('Cotação'); if (!meu(c.customer_id)) nega();
+      if (c.accepted) throw new ApiError('Cotação já utilizada em um pedido', 409);
+      if (new Date(c.expires_at) <= Date.now()) throw new ApiError('Cotação expirada', 422);
+      c.accepted = true;
+      const p = { id: uid(), customer_id: c.customer_id, quote_id: c.id, status: 'CRIADO', origem: c.origem, destino: c.destino, valor_estimado: c.valor_estimado, created_at: iso(Date.now()) };
+      e.pedidos.push(p); salvar(e); return p;
+    }
+    const p = e.pedidos.find((x) => x.id === seg[1]); if (!p) nao('Pedido'); if (!meu(p.customer_id)) nega();
+    if (seg[2] === 'tracking') {
+      const feitos = FEITOS[p.status];
+      const base = new Date(p.created_at).getTime();
+      const events = PASSOS.slice(0, feitos).map(([, t], i) => ({ timestamp: iso(base + 6 * H * (i + 1)), description: t.replace('{o}', p.origem).replace('{d}', p.destino), location: i < 2 ? p.origem : p.destino }));
+      return { order_id: p.id, status: feitos ? PASSOS[feitos - 1][0] : ESPERA[p.status], events, source: 'mock' };
+    }
+    if (seg[2] === 'status' && method === 'PATCH') {
+      if (!equipe) throw new ApiError(SEM_ATENDENTE, 403);
+      if (body.status === p.status) return p;
+      if (!PROXIMOS[p.status].includes(body.status)) throw new ApiError(`Transição de status inválida: ${p.status} -> ${body.status}`, 422);
+      p.status = body.status; salvar(e); return p;
+    }
+    return p;
+  }
+
+  if (seg[0] === 'tickets') {
+    const detalhe = (t) => ({ ...t, messages: t.mensagens });
+    const semMsgs = (t) => { const { mensagens, ...r } = t; return r; }; // eslint-disable-line no-unused-vars
+    if (seg.length === 1 && method === 'GET') {
+      let l = e.tickets.filter((t) => meu(t.customer_id));
+      if (q.get('status')) l = l.filter((t) => t.status === q.get('status'));
+      return ordenar(l).slice(0, limite).map(semMsgs);
+    }
+    if (seg.length === 1 && method === 'POST') {
+      if (!meu(body.customer_id)) nega();
+      const t = { id: uid(), customer_id: body.customer_id, order_id: body.order_id, categoria: body.categoria, prioridade: body.prioridade, assunto: body.assunto, status: 'ABERTO',
+        sla_due_at: iso(Date.now() + SLA_H[body.prioridade] * H), created_at: iso(Date.now()),
+        mensagens: [{ id: uid(), author_role: papel, mensagem: body.mensagem, created_at: iso(Date.now()) }] };
+      e.tickets.push(t); salvar(e); return semMsgs(t);
+    }
+    const t = e.tickets.find((x) => x.id === seg[1]); if (!t) nao('Ticket'); if (!meu(t.customer_id)) nega();
+    if (seg[2] === 'messages' && method === 'POST') {
+      if (t.status === 'RESOLVIDO') throw new ApiError('Ticket resolvido não aceita novas mensagens', 422);
+      t.mensagens.push({ id: uid(), author_role: papel, mensagem: body.mensagem, created_at: iso(Date.now()) });
+      if (equipe && t.status === 'ABERTO') t.status = 'EM_ATENDIMENTO';
+      salvar(e); return semMsgs(t);
+    }
+    if (seg[2] === 'status' && method === 'PATCH') {
+      if (!equipe) throw new ApiError(SEM_ATENDENTE, 403);
+      t.status = body.status; salvar(e); return semMsgs(t);
+    }
+    return detalhe(t);
+  }
+
+  if (seg[0] === 'claims') {
+    if (method === 'GET') return ordenar(e.sinistros.filter((s) => meu(s.customer_id))).slice(0, limite);
+    const p = e.pedidos.find((x) => x.id === body.order_id); if (!p) nao('Pedido'); if (!meu(p.customer_id)) nega();
+    if (p.status === 'CANCELADO') throw new ApiError('Pedido cancelado não aceita sinistro', 422);
+    const s = { id: uid(), order_id: p.id, customer_id: p.customer_id, tipo: body.tipo, descricao: body.descricao, valor_reclamado: String(body.valor_reclamado), status: 'REGISTRADO', created_at: iso(Date.now()) };
+    e.sinistros.push(s); salvar(e); return s;
+  }
+
+  if (seg[0] === 'feedback' && method === 'POST') {
+    const chaveId = body.target === 'ENTREGA' ? body.order_id : body.ticket_id;
+    if (!chaveId) throw new ApiError(body.target === 'ENTREGA' ? 'order_id é obrigatório para avaliar a entrega' : 'ticket_id é obrigatório para avaliar o atendimento', 422);
+    if (body.target === 'ENTREGA') {
+      const p = e.pedidos.find((x) => x.id === body.order_id); if (!p) nao('Pedido'); if (!meu(p.customer_id)) nega();
+      if (p.status !== 'ENTREGUE') throw new ApiError('A entrega só pode ser avaliada após o pedido ser entregue', 422);
+    }
+    if (e.avaliacoes.some((a) => a.target === body.target && (a.order_id ?? a.ticket_id) === chaveId)) throw new ApiError('Este item já foi avaliado', 409);
+    e.avaliacoes.push({ target: body.target, order_id: body.order_id, ticket_id: body.ticket_id }); salvar(e);
+    return { id: uid(), target: body.target, nota: body.nota, comentario: body.comentario ?? null, order_id: body.order_id ?? null, ticket_id: body.ticket_id ?? null };
+  }
+
+  throw new ApiError(`Rota não disponível na demonstração: ${method} ${rota}`, 404);
+}

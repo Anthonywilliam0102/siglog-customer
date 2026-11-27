@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siglog.local/contracts/customer/ClienteNotificado.schema.json",
+  "title": "ClienteNotificado",
+  "description": "Notificação enviada ao cliente (auditoria).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único. Consumidores devem deduplicar por este campo (entrega at-least-once)."
+    },
+    "event_type": {
+      "const": "ClienteNotificado"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "siglog-customer"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Propague nos seus eventos/logs para rastrear o fluxo entre squads."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "cliente_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "canal": {
+          "type": "string"
+        },
+        "motivo": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cliente_id",
+        "canal",
+        "motivo"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
