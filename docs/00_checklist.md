@@ -112,6 +112,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] E2E: 23/23 no modo demonstração e 22/22 no modo real
 - [x] Login social no front (Google e GitHub, só aparecem os provedores ligados em `VITE_AUTH_PROVIDERS`); Apple descartada (US$ 99/ano)
 - [x] GitHub ligado no Supabase (OAuth App, URL Configuration) e `VITE_AUTH_PROVIDERS=github`
+- [x] Front também no **Cloudflare Pages** (`https://siglog-customer.pages.dev`), ligado ao GitHub; endereço principal para o professor
+- [ ] 👤 Conferir no site novo o login com GitHub e o criar conta (Redirect URL do Supabase: `https://siglog-customer.pages.dev/**`)
 - [ ] 👤 (opcional) Google no login: 15 min, `docs/15_supabase.md` 4.2
 - [x] Supabase: Confirm email desligado, inscrição e provedor Email ligados (conferido por print)
 - [x] **Verificado pelo usuário no site real (27/11):** login com GitHub, criar conta com e-mail e senha, e Configurações → Integrações (confirma a migração 0003 no Supabase)

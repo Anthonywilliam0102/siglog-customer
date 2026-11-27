@@ -25,7 +25,10 @@ Segredos só nos painéis (nunca no repositório). Todos os passos abaixo são f
 3. **Actions → "Publicar portal (GitHub Pages)" → Run workflow** (ou faça um push em `frontend/`). O endereço será `https://<usuario>.github.io/<repositorio>/` (aparece no fim do job).
 4. Se alguma das três variáveis faltar, o workflow publica o modo demonstração (e avisa no log); só com as três ele publica o sistema real.
 
-### 2B. Front no Cloudflare Pages (alternativa)
+### 2B. Front no Cloudflare Pages (endereço principal: `siglog-customer.pages.dev`)
+**Em uso desde 27/11**, ligado ao GitHub (cada merge na `main` republica). Configuração: *Workers & Pages → Create → Pages → Connect to Git* (use o link "Continue to Pages", pois o botão novo cria um Worker `workers.dev`); root `frontend`, build `npm ci && npm run build`, saída `dist`; variáveis `NODE_VERSION=22`, `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_AUTH_PROVIDERS`. No Supabase, adicione `https://siglog-customer.pages.dev/**` em *Redirect URLs*.
+
+Detalhes do modo manual (alternativa):
 1. Cloudflare → **Workers & Pages → Create → Pages → Connect to Git** → repositório → branch `main`.
 2. Configuração: **Root directory** `frontend` · **Build command** `npm run build` · **Build output** `dist`.
 3. Variáveis de ambiente (build): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (chave **publishable**, nunca a secret), `VITE_API_URL` = URL da API do passo 1 (sem barra no fim), `NODE_VERSION` = `22`.
