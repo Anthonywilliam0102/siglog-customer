@@ -8,7 +8,12 @@ if settings.database_url.startswith("postgresql"):
     # Pooler do Supabase (modo transaction) não suporta prepared statements do psycopg 3.
     _connect_args["prepare_threshold"] = None
 
-engine = create_engine(settings.database_url, pool_pre_ping=True, connect_args=_connect_args)
+_pool = {}
+if not settings.database_url.startswith("sqlite"):  # SQLite (testes) usa pool próprio
+    _pool = {"pool_size": settings.db_pool_size, "max_overflow": settings.db_max_overflow,
+             "pool_timeout": settings.db_pool_timeout, "pool_recycle": 1800}
+
+engine = create_engine(settings.database_url, pool_pre_ping=True, connect_args=_connect_args, **_pool)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 

@@ -18,6 +18,7 @@ from prometheus_client import (
     generate_latest,
 )
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
 from src.api.routes import router
 from src.config.settings import settings
@@ -54,6 +55,14 @@ REGISTRY.register(DomainCollector(SessionLocal))
 async def domain_error_handler(request: Request, exc: DomainError):
     log_event("domain_error", level="WARNING", path=request.url.path, detail=exc.message)
     return JSONResponse(status_code=exc.status, content={"detail": exc.message})
+
+
+@app.exception_handler(PoolTimeoutError)
+async def pool_timeout_handler(request: Request, exc: PoolTimeoutError):
+    # Sem conexão livre no pool: falha rápida (o cliente tenta de novo) em vez de segurar threads e travar a API.
+    log_event("db_pool_exhausted", level="WARNING", path=request.url.path)
+    return JSONResponse({"detail": "Servidor ocupado, tente novamente em instantes"}, status_code=503,
+                        headers={"Retry-After": "2"})
 
 
 @app.exception_handler(IntegrityError)
