@@ -193,3 +193,31 @@ Status por requisição obtidos com `--out csv` (o `k6.js` não foi alterado).
 
 ### Estado ao final
 API local com o pool padrão (10+10) e **banco local**. Tarefas 7 e 8 da rodada 6 (E2E e seed em produção) continuam sem OK, não executadas.
+
+## 2026-11-27 — Rodada 8: limite de requisições em andamento (código `0340860`)
+
+`ruff check .` limpo; `pytest`: **94 passed**. API no **banco local** (`DATABASE_URL` host `postgres:5432`, credenciais omitidas), mesmo override fora do repositório. Pool padrão (10+10, timeout 5 s), limite de 64 requisições em andamento. Só o cenário **pico** (500 req/s, 60 s), uma execução de cada; WEB_CONCURRENCY=4 por override temporário (conferidos 4 processos). K6 e API na mesma máquina, rede do Compose.
+
+| | 1 processo (padrão) | WEB_CONCURRENCY=4 |
+|---|---|---|
+| req/s (total) | 496,7 | 491,2 |
+| respostas 200/201 | 2843 (9,50%) | 12599 (42,35%) |
+| p95 / p99 (todas) | 1,08 s / 1,51 s | 1,39 s / 1,85 s |
+| p95 / p99 (só 200/201) | 1,52 s / 1,69 s | 1,65 s / 2,01 s |
+| % de erro (todos 503) | 90,50% | 57,65% |
+| sem resposta (timeout) | 0 | 0 |
+| descartadas | 52 | 250 |
+| (a) 503: p50 / p95 / máx | 61 ms / 154 ms / 7,04 s | 65 ms / 189 ms / 429 ms |
+| (b) `/health` durante o pico | 41 de 42 com 200 (1 sem resposta em 5 s); máx. 2,4 s | 51 de 51 com 200; máx. 591 ms |
+| (c) volta após o fim da carga | imediata (~0 s) | imediata (~0 s) |
+| (d) `db_pool_exhausted` no log | 0 | 0 |
+| thresholds | os três falharam | os três falharam |
+
+- (a) **503 rápidas: CONFIRMADO.** Antes: p50 de 36 s.
+- (b) **`/health` no pico: CONFIRMADO** com 4 processos; com 1 processo houve uma falha isolada no começo da carga.
+- (c) **Volta imediata: CONFIRMADO** (antes: 105 a 120 s). Medido com sondagem a cada ~1 s.
+- (d) **CONFIRMADO:** pool não esgotou; `QueuePool` 0, `traceback` 0, container sem reinício.
+- **Thresholds do pico: FALHOU.** O limitador recusa o excesso; a capacidade atendida foi de cerca de 47 req/s (1 processo) e 210 req/s (4 processos), com 500 req/s oferecidos.
+- **NÃO VERIFICADO:** cenário normal depois deste commit; repetição das execuções; ambiente publicado; limite de conexões do Supabase com vários processos (cada um tem o próprio pool).
+
+Estado ao final: API local com 1 processo e banco local.
