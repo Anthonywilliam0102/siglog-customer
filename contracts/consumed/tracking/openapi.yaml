@@ -1,0 +1,47 @@
+# PROPOSTA DO SQUAD 06 (CRM): NÃO é o contrato oficial do Tracking.
+# Foi escrita a partir do que o CRM precisa (UC05 - consultar rastreamento). O squad 03 deve substituir este arquivo
+# pelo contrato oficial; até lá ele alimenta o mock (Prism) e o teste de contrato da nossa camada anticorrupção.
+openapi: 3.0.3
+info:
+  title: Tracking — consulta de rastreamento por pedido (PROPOSTA)
+  version: 0.1.0-proposta
+paths:
+  /tracking/orders/{order_id}:
+    get:
+      summary: Situação e histórico de rastreamento de um pedido
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Rastreamento encontrado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Rastreamento" }
+              example:
+                status: IN_TRANSIT
+                events:
+                  - { timestamp: "2026-11-27T10:00:00Z", description: "Coletado no CD de São Paulo", location: "São Paulo/SP" }
+                  - { timestamp: "2026-11-27T16:00:00Z", description: "Em trânsito para Recife", location: "Campinas/SP" }
+        "404":
+          description: Pedido sem rastreamento
+components:
+  schemas:
+    Rastreamento:
+      type: object
+      required: [status, events]
+      properties:
+        status:
+          type: string
+          enum: [PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, EXCEPTION]
+        events:
+          type: array
+          items:
+            type: object
+            required: [timestamp, description]
+            properties:
+              timestamp: { type: string, format: date-time }
+              description: { type: string }
+              location: { type: string }

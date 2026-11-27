@@ -1,0 +1,17 @@
+# Mock do Tracking (Prism) gerado a partir de contracts/consumed/tracking/openapi.yaml.
+# Uso:  docker compose -f docker-compose.yml -f docker-compose.integracao.yml up -d --build
+# (junte com -f docker-compose.supabase.yml se o banco for o Supabase)
+# Quando o squad 03 publicar o contrato oficial, basta substituir o arquivo; o mock e o teste de contrato passam a usá-lo.
+services:
+  tracking-mock:
+    image: stoplight/prism:5
+    command: ["mock", "-h", "0.0.0.0", "-p", "4010", "/contracts/tracking/openapi.yaml"]
+    volumes:
+      - ./contracts/consumed:/contracts:ro
+    ports: ["127.0.0.1:4010:4010"]
+  api:
+    environment:
+      TRACKING_BASE_URL: http://tracking-mock:4010
+      TRACKING_MOCK: "false"
+    depends_on:
+      tracking-mock: { condition: service_started }

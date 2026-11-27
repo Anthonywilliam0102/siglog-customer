@@ -1,5 +1,7 @@
 # Catálogo de Eventos — SIG-Log Customer
 
+> **Fonte verificada por máquina:** `contracts/provided/` (JSON Schema, exemplos e AsyncAPI, gerados do código e testados). Este arquivo é o resumo legível. Guia de integração: [docs/20_integracao_squads.md](20_integracao_squads.md).
+
 **Broker:** RabbitMQ · **Exchange:** `siglog.events` (topic) · **Routing key:** `customer.<evento>` · **Formato:** JSON (envelope abaixo) · **Entrega:** at-least-once via *Outbox* → consumidores devem ser **idempotentes** (usar `event_id`).
 
 ## Envelope

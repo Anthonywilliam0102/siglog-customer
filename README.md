@@ -52,6 +52,8 @@ Python 3.12 + FastAPI · PostgreSQL (local / Supabase) · RabbitMQ · Docker Com
 | Observabilidade e segurança | `docs/10`, `docs/11`, `monitoring/` |
 | ATAM, teste de carga, ADRs | `docs/12`, `docs/13`, `docs/adr/` |
 | Roteiro do Demoday | `docs/14_demoday_roteiro.md` |
+| Integração com os outros squads | `contracts/`, `docs/20_integracao_squads.md` |
+| Publicação e entrega ao professor | `docs/18_publicacao.md`, `docs/19_entrega_professor.md` |
 
 ## Documentação
 Progresso e pendências: [docs/00_checklist.md](docs/00_checklist.md)

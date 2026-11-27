@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siglog.local/contracts/customer/SinistroRegistrado.schema.json",
+  "title": "SinistroRegistrado",
+  "description": "Avaria, extravio ou ocorrência registrada. Consumidor: Financeiro (estorno e indenização).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único. Consumidores devem deduplicar por este campo (entrega at-least-once)."
+    },
+    "event_type": {
+      "const": "SinistroRegistrado"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "siglog-customer"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Propague nos seus eventos/logs para rastrear o fluxo entre squads."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "sinistro_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "pedido_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "cliente_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "tipo": {
+          "type": "string"
+        },
+        "valor_reclamado": {
+          "type": "string",
+          "pattern": "^\\d+(\\.\\d+)?$",
+          "description": "valor monetário como texto decimal (ex.: \"290.40\")"
+        }
+      },
+      "required": [
+        "sinistro_id",
+        "pedido_id",
+        "cliente_id",
+        "tipo",
+        "valor_reclamado"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

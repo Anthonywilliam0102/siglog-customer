@@ -15,8 +15,10 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - name: Lint
         run: ruff check .
-      - name: Unit tests
-        run: pytest tests/unit --cov=src --cov-report=xml
+      - name: Contratos recebidos dos outros squads
+        run: python scripts/validar_contratos.py
+      - name: Testes (unit, integration, contract)
+        run: pytest --cov=src --cov-report=xml   # suíte completa: unit, integration e contract
       - uses: actions/upload-artifact@v4
         with: { name: coverage, path: coverage.xml }
 

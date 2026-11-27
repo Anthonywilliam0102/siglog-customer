@@ -6,6 +6,10 @@ import RouteArt from '../components/RouteArt.jsx';
 import { useAuth } from '../auth.jsx';
 import { entrar, entrarComTokenDev, temSupabase } from '../session.js';
 
+// Atalhos só no modo de desenvolvimento (sem Supabase) e somente se as variáveis existirem no build local.
+const RAPIDOS = [['Entrar como cliente', import.meta.env.VITE_DEV_TOKEN_CLIENTE], ['Entrar como atendente', import.meta.env.VITE_DEV_TOKEN_ATENDENTE]]
+  .filter(([, t]) => t);
+
 export default function Login() {
   const { perfil, carregando } = useAuth();
   const [erro, setErro] = useState(() => {
@@ -65,6 +69,11 @@ export default function Login() {
           )}
           <Alerta>{erro}</Alerta>
           <button className="primario" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
+          {!temSupabase && RAPIDOS.length > 0 && (
+            <div className="acoes">
+              {RAPIDOS.map(([rotulo, t]) => <button type="button" key={rotulo} onClick={() => entrarComTokenDev(t)}>{rotulo}</button>)}
+            </div>
+          )}
           <p className="aviso-rodape">Projeto acadêmico · dados fictícios</p>
         </form>
       </section>

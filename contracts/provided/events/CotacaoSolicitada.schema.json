@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siglog.local/contracts/customer/CotacaoSolicitada.schema.json",
+  "title": "CotacaoSolicitada",
+  "description": "Cliente pediu uma cotação. Consumidor típico: Financeiro (opcional).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "correlation_id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único. Consumidores devem deduplicar por este campo (entrega at-least-once)."
+    },
+    "event_type": {
+      "const": "CotacaoSolicitada"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "siglog-customer"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Propague nos seus eventos/logs para rastrear o fluxo entre squads."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "cotacao_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "cliente_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origem": {
+          "type": "string"
+        },
+        "destino": {
+          "type": "string"
+        },
+        "peso_kg": {
+          "type": "number"
+        },
+        "volume_m3": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "cotacao_id",
+        "cliente_id",
+        "origem",
+        "destino",
+        "peso_kg",
+        "volume_m3"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

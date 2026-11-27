@@ -40,7 +40,7 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Criar o usuário atendente de verdade no padrão da equipe (hoje é `atendimento@exemplo.com`, com perfil `atendente`)
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
-- [x] Testes unitários, integração e contrato (54 testes, SQLite)
+- [x] Testes unitários, integração e contrato (67 testes, SQLite)
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
@@ -90,6 +90,18 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] PR #1 mergeado na `main` (commit `600be1b`); CI e publicação da imagem no GHCR passaram
 - [x] Script de entrega `scripts/exportar_para_professor.sh` e guia `docs/19_entrega_professor.md` (fork + PR)
 - [ ] 👤 Entregar ao repositório do professor (fork, pasta do squad, Pull Request) — falta a URL e o padrão de pasta do professor
+
+## Integração entre squads e publicação (27/11)
+- [x] Estrutura `contracts/` (entregamos em `provided/`, recebemos em `consumed/<squad>/`) e guia `docs/20_integracao_squads.md`
+- [x] Contratos dos nossos eventos gerados do código (JSON Schema, exemplos, AsyncAPI) e testados: os eventos realmente emitidos validam contra os schemas
+- [x] Proposta de contrato do Tracking + mock Prism (`docker-compose.integracao.yml`) + teste de contrato da nossa ACL
+- [x] Consumidor de exemplo `scripts/consumir_eventos.py` para os outros squads e para provar a entrega no RabbitMQ
+- [x] **CI corrigido:** rodava só `tests/unit` (27 de 67 testes); agora roda a suíte inteira (cobertura 94%) e valida os contratos recebidos
+- [x] Publicação do front no GitHub Pages (`pages.yml`, subcaminho, variáveis) e `scripts/seed_demo.py` (dados de demonstração)
+- [ ] 👤 Pedir os contratos aos squads 01, 02, 03, 04 e 05 (mensagem pronta em `docs/20`, seção 4) e combinar RabbitMQ compartilhado
+- [ ] 👤 Rodar `scripts/consumir_eventos.py` contra o RabbitMQ e criar um pedido, para provar a entrega dos eventos
+- [ ] 👤 Habilitar o GitHub Pages, criar as 3 variáveis e publicar a API no Render (`docs/18_publicacao.md`)
+- [ ] 👤 Popular o banco da demo: `scripts/seed_demo.py --sim`
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)
