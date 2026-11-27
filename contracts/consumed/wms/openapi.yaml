@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: WMS — separação de pedidos (PROPOSTA do Squad 06 — a confirmar com o squad)
+  version: 0.1.0
+  description: >
+    SUPOSIÇÃO do Squad 06: o que o CRM precisa consultar para mostrar no pedido. Quando o squad enviar o contrato oficial,
+    substitua este arquivo e ajuste src/infrastructure/clients/squads.py (a única camada que conhece o formato).
+    Autenticação: cabeçalho com chave de API (nome configurável em Integrações).
+paths:
+  /separacao/pedidos/{order_id}:
+    get:
+      summary: Situação do pedido neste squad
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Situação atual
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [AGUARDANDO, EM_SEPARACAO, SEPARADO, ENVIADO, CANCELADO] }
+                  itens_total: { type: integer }
+                  itens_separados: { type: integer }
+                  atualizado_em: { type: string }
+        "404": { description: Pedido desconhecido neste squad }

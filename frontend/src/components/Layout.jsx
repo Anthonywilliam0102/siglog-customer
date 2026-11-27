@@ -1,8 +1,9 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
-import { sair, temDemo } from '../session.js';
+import { temDemo } from '../session.js';
 import Icon, { Logo } from './Icons.jsx';
 import { useArrastar } from './Rolavel.jsx';
+import MenuUsuario from './MenuUsuario.jsx';
 import SeloEquipe from './SeloEquipe.jsx';
 
 export default function Layout() {
@@ -11,11 +12,7 @@ export default function Layout() {
   const itens = [
     ['/', 'Início', 'home'],
     ...(equipe ? [['/atendimento', 'Atendimento', 'shield']] : [['/cotacao', 'Nova cotação', 'calc']]),
-    ['/pedidos', 'Pedidos', 'box'],
-    ['/chamados', 'Chamados', 'chat'],
-    ['/sinistros', 'Sinistros', 'alert'],
-    ...(equipe ? [['/configuracoes', 'Configurações', 'sliders']] : []),
-  ];
+  ]; // pedidos, chamados, sinistros, conta e configurações ficam no menu da "carinha" (MenuUsuario)
   return (
     <>
       <a className="pular" href="#conteudo">Pular para o conteúdo</a>
@@ -29,7 +26,7 @@ export default function Layout() {
         </nav>
         <div className="usuario">
           <span className="muted">{equipe ? perfil.role : 'cliente'}</span>
-          <button className="link" onClick={sair}>Sair</button>
+          <MenuUsuario />
         </div>
       </header>
       <main id="conteudo"><Outlet /></main>

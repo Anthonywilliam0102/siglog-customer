@@ -71,69 +71,6 @@ function Conexao() {
   );
 }
 
-function Integracao({ item, aoSalvar }) {
-  const toast = useToast();
-  const [chave, setChave] = useState('');
-  const [erro, setErro] = useState('');
-  const [salvando, setSalvando] = useState(false);
-
-  async function enviar(e, limparChave = false) {
-    e.preventDefault();
-    const f = new FormData(e.target.form ?? e.target);
-    setErro('');
-    setSalvando(true);
-    try {
-      const corpo = { base_url: f.get('base_url') ?? '', header_name: f.get('header_name') || 'X-API-Key', limpar_chave: limparChave };
-      if (chave) corpo.api_key = chave;
-      await api(`/settings/integrations/${item.squad}`, { method: 'PUT', body: corpo });
-      setChave('');
-      toast.ok(limparChave ? 'Chave removida.' : `Integração com ${item.nome.split(' · ')[1]} salva.`);
-      aoSalvar();
-    } catch (err) {
-      setErro(err.message);
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  return (
-    <form className="cartao integracao" onSubmit={enviar}>
-      <div className="integracao-topo">
-        <h3>{item.nome}</h3>
-        <Selo tom={item.base_url ? 'ok' : 'info'}>{item.base_url ? 'Configurada' : 'Não configurada'}</Selo>
-      </div>
-      <Campo label="URL base da API"><input name="base_url" defaultValue={item.base_url ?? ''} placeholder="https://api.squad.exemplo.com" inputMode="url" /></Campo>
-      <div className="duas">
-        <Campo label="Cabeçalho da chave"><input name="header_name" defaultValue={item.header_name} placeholder="X-API-Key" /></Campo>
-        <Campo label="Chave de API" ajuda={item.tem_chave ? 'Já existe uma chave guardada; digite para trocar.' : 'Guardada cifrada no servidor.'}>
-          <input type="password" autoComplete="new-password" value={chave} onChange={(e) => setChave(e.target.value)} placeholder={item.tem_chave ? '••••••••••••' : 'cole a chave aqui'} />
-        </Campo>
-      </div>
-      <Alerta>{erro}</Alerta>
-      <div className="acoes esq">
-        <button className="primario" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar'}</button>
-        {item.tem_chave && <button type="button" className="perigo" disabled={salvando} onClick={(e) => enviar(e, true)}>Remover chave</button>}
-        {item.atualizado_em && <span className="muted pequeno">Atualizado em {dataHora(item.atualizado_em)}</span>}
-      </div>
-    </form>
-  );
-}
-
-function Integracoes() {
-  const { dados, erro, carregando, recarregar } = useCarga(() => api('/settings/integrations'), []);
-  return (
-    <>
-      <Alerta tipo="info"><b>Segurança:</b> a chave é enviada ao servidor, guardada cifrada e <b>nunca volta para o navegador</b>. Ela só é usada pelo servidor para chamar a API do outro squad. Para o rastreamento (Squad 03), configurar a URL passa a usar a API real no lugar do rastreamento simulado.</Alerta>
-      <Alerta>{erro}</Alerta>
-      {carregando ? <Carregando /> : (
-        <div className="grade-integracoes">
-          {(dados ?? []).map((i) => <Integracao key={`${i.squad}-${i.atualizado_em}`} item={i} aoSalvar={recarregar} />)}
-        </div>
-      )}
-    </>
-  );
-}
-
 function Sobre() {
   return (
     <section className="cartao">
@@ -150,14 +87,14 @@ function Sobre() {
   );
 }
 
-const ABAS = [['conexao', 'Conexão', 'plug'], ['integracoes', 'Integrações', 'link'], ['sobre', 'Sobre', 'info']];
+const ABAS = [['conexao', 'Conexão', 'plug'], ['sobre', 'Sobre', 'info']];
 
 export default function Configuracoes() {
   const [aba, setAba] = useState('conexao');
   return (
     <div className="pagina">
       <Voltar para="/" />
-      <Cabecalho titulo="Configurações" subtitulo="Conexão com a API e integrações com os outros squads." />
+      <Cabecalho titulo="Configurações" subtitulo="Conexão com a API deste navegador e informações do sistema. As integrações com os outros squads ficam no menu da conta." />
       <div className="abas" role="tablist" aria-label="Seções de configuração">
         {ABAS.map(([id, nome, icone]) => (
           <button key={id} role="tab" type="button" id={`aba-${id}`} aria-selected={aba === id} aria-controls={`painel-${id}`}
@@ -166,7 +103,6 @@ export default function Configuracoes() {
       </div>
       <div role="tabpanel" id={`painel-${aba}`} aria-labelledby={`aba-${aba}`} className="painel-aba">
         {aba === 'conexao' && <Conexao />}
-        {aba === 'integracoes' && <Integracoes />}
         {aba === 'sobre' && <Sobre />}
       </div>
     </div>

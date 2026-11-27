@@ -65,12 +65,42 @@ export async function demoApi(caminho, { method = 'GET', body } = {}, token) {
 
   if (seg[0] === 'me') return { sub, role: papel };
 
+  const NOMES = { wms: 'Squad 01 · WMS & Estoque', frota: 'Squad 02 · Frota & Roteirização', tracking: 'Squad 03 · Rastreamento', financeiro: 'Squad 04 · Financeiro', rh: 'Squad 05 · RH & Jornada' };
+  const FUNCAO = {
+    wms: 'Mostra no pedido o andamento da separação no centro de distribuição.',
+    frota: 'Sem integração direta prevista com o CRM.',
+    tracking: 'Mostra o rastreamento do pedido (posição e eventos de entrega).',
+    financeiro: 'Mostra no pedido a cobrança e o frete.',
+    rh: 'Sem integração direta prevista com o CRM.',
+  };
+
+  if (seg[0] === 'integrations' && seg[1] === 'status') {
+    return Object.keys(NOMES).map((sq) => ({ squad: sq, nome: NOMES[sq], funcao: FUNCAO[sq],
+      modo: ['frota', 'rh'].includes(sq) ? 'nao_prevista' : (e.integracoes ?? {})[sq]?.base_url ? 'configurada' : 'simulada' }));
+  }
+
+  if (seg[0] === 'orders' && seg[2] === 'squads') {
+    const o = e.pedidos.find((x) => x.id === seg[1]); if (!o) nao('Pedido'); if (!meu(o.customer_id)) nega();
+    const wms = { CRIADO: ['Aguardando separação', 0], EM_SEPARACAO: ['Em separação', 3], EM_TRANSPORTE: ['Enviado ao transporte', 5], ENTREGUE: ['Enviado ao transporte', 5], CANCELADO: ['Cancelado', 0] }[o.status];
+    const fin = { ENTREGUE: 'Paga', CANCELADO: 'Estornada' }[o.status] ?? 'Cobrança pendente';
+    const venc = new Date(new Date(o.created_at).getTime() + 7 * 24 * H).toLocaleDateString('pt-BR');
+    return [
+      { squad: 'wms', titulo: 'Separação no CD (WMS)', fonte: 'simulado', status: wms[0], mensagem: null,
+        detalhes: [{ rotulo: 'Itens separados', valor: `${wms[1]} de 5` }] },
+      { squad: 'financeiro', titulo: 'Cobrança e frete (Financeiro)', fonte: 'simulado', status: fin, mensagem: null,
+        detalhes: [{ rotulo: 'Valor', valor: `R$ ${Number(o.valor_estimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` }, { rotulo: 'Vencimento', valor: venc }] },
+    ];
+  }
+
   if (seg[0] === 'settings' && seg[1] === 'integrations') {
     if (!equipe) throw new ApiError('Apenas a equipe pode ver ou alterar as integrações', 403);
-    const NOMES = { wms: 'Squad 01 · WMS & Estoque', frota: 'Squad 02 · Frota & Roteirização', tracking: 'Squad 03 · Rastreamento', financeiro: 'Squad 04 · Financeiro', rh: 'Squad 05 · RH & Jornada' };
     const vista = (sq) => { const c = (e.integracoes ??= {})[sq] ?? {}; return { squad: sq, nome: NOMES[sq], base_url: c.base_url ?? null, header_name: c.header_name ?? 'X-API-Key', tem_chave: !!c.tem_chave, atualizado_em: c.atualizado_em ?? null, atualizado_por: c.atualizado_por ?? null }; };
     if (seg.length === 2) return Object.keys(NOMES).map(vista);
     const sq = seg[2]; if (!NOMES[sq]) nao('Squad');
+    if (seg[3] === 'test') {
+      if (!(e.integracoes ?? {})[sq]?.base_url) throw new ApiError('Configure a URL antes de testar a conexão', 422);
+      return { ok: false, status_http: null, ms: 0, erro: 'No modo demonstração não há conexão real com o outro squad.' };
+    }
     const c = ((e.integracoes ??= {})[sq] ??= {});
     if (typeof body.base_url === 'string') {
       const u = body.base_url.trim().replace(/\/$/, '');

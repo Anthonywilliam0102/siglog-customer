@@ -44,6 +44,32 @@ function Rastreamento({ id }) {
   );
 }
 
+function PaineisSquads({ id, status }) {
+  const { equipe } = useAuth();
+  const { dados, carregando } = useCarga(() => api(`/orders/${id}/squads`), [id, status]);
+  if (carregando || !dados?.length) return null;
+  return (
+    <section className="cartao">
+      <h2>Informações de outros squads</h2>
+      <div className="paineis-squads">
+        {dados.map((p) => (
+          <div key={p.squad} className="painel-squad">
+            <p className="painel-titulo">{p.titulo}</p>
+            {p.fonte === 'nao_configurada' || p.fonte === 'indisponivel' ? (
+              <p className="muted">{p.mensagem}{equipe && p.fonte === 'nao_configurada' && <> <Link to="/integracoes">Configurar</Link></>}</p>
+            ) : (
+              <>
+                <p><b>{p.status}</b>{p.fonte === 'simulado' && <span className="muted"> · simulado (demonstração)</span>}</p>
+                {p.detalhes.map((d) => <p key={d.rotulo} className="linha-info"><span>{d.rotulo}</span>{d.valor}</p>)}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Avaliar({ pedido }) {
   const toast = useToast();
   const [nota, setNota] = useState(0);
@@ -106,6 +132,7 @@ export default function PedidoDetalhe() {
         acao={<SeloPedido status={p.status} />} />
       <section className="cartao"><Linha status={p.status} /></section>
       <Rastreamento id={p.id} key={p.status} />
+      <PaineisSquads id={p.id} status={p.status} />
       <section className="acoes">
         <Link className="botao" to={`/chamados/novo?pedido=${p.id}`}>Abrir chamado</Link>
         {p.status !== 'CANCELADO' && <Link className="botao" to={`/sinistros/novo?pedido=${p.id}`}>Registrar sinistro</Link>}

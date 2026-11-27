@@ -172,3 +172,31 @@ class IntegracaoIn(BaseModel):
     header_name: str | None = Field(None, pattern=r"^[A-Za-z0-9-]{1,64}$", examples=["X-API-Key"])
     api_key: str | None = Field(None, min_length=8, max_length=512, description="Guardada cifrada; não é devolvida")
     limpar_chave: bool = False
+
+
+class IntegracaoStatusOut(BaseModel):
+    squad: str
+    nome: str
+    funcao: str
+    modo: str = Field(description="configurada | simulada | nao_configurada | nao_prevista")
+
+
+class DetalheOut(BaseModel):
+    rotulo: str
+    valor: str
+
+
+class PainelSquadOut(BaseModel):
+    squad: str
+    titulo: str
+    fonte: str = Field(description="integracao | simulado | indisponivel | nao_configurada")
+    status: str | None
+    detalhes: list[DetalheOut] = []
+    mensagem: str | None = None
+
+
+class TesteIntegracaoOut(BaseModel):
+    ok: bool
+    status_http: int | None
+    ms: int
+    erro: str | None

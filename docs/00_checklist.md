@@ -121,7 +121,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] PR #3 mergeado; o Render aplicou a migração 0003 no Supabase
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
-- [ ] Integração com WMS e Financeiro (eventos consumidos)
+- [x] Painéis de WMS e Financeiro no detalhe do pedido (via API configurável; simulados sem URL) e página **Integrações** no menu da conta, com Testar conexão (27/11; 87 testes; E2E demo 31/31 e real 30/30). Contratos de WMS/Financeiro são PROPOSTA, NÃO VERIFICADO com os squads
+- [ ] Consumo de eventos (WMS e Financeiro) — depende dos contratos oficiais
 - [ ] Release Candidate (congelamento)
 - [ ] Release v1.0.0 (tag)
 - [ ] README final

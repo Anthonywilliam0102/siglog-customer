@@ -157,3 +157,21 @@ def put_integration(squad: str, body: s.IntegracaoIn, session: Session = Depends
                     actor: Actor = Depends(get_actor)):
     salvo = svc.salvar_integracao(session, actor, squad, body.base_url, body.header_name, body.api_key, body.limpar_chave)
     return commit(session, salvo)
+
+
+@router.get("/integrations/status", response_model=list[s.IntegracaoStatusOut], tags=["configurações"],
+            summary="Modo de cada integração (qualquer usuário logado; sem URLs nem chaves)", responses=ERR)
+def get_integrations_status(session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.status_integracoes(session, actor)
+
+
+@router.get("/orders/{order_id}/squads", response_model=list[s.PainelSquadOut], tags=["pedidos"],
+            summary="O que os outros squads informam sobre o pedido (WMS e Financeiro)", responses=ERR)
+def get_order_squads(order_id: uuid.UUID, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.paineis_do_pedido(session, actor, order_id)
+
+
+@router.post("/settings/integrations/{squad}/test", response_model=s.TesteIntegracaoOut, tags=["configurações"],
+             summary="Testar a conexão com a URL configurada (equipe)", responses=ERR)
+def post_integration_test(squad: str, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.testar_integracao(session, actor, squad)

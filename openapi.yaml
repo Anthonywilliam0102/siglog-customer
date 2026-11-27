@@ -746,6 +746,96 @@ paths:
           description: Regra de negócio/validação
         '409':
           description: SETTINGS_ENCRYPTION_KEY não configurada no servidor
+  /integrations/status:
+    get:
+      tags:
+      - configurações
+      summary: Modo de cada integração (qualquer usuário logado; sem URLs nem chaves)
+      operationId: get_integrations_status_integrations_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IntegracaoStatusOut'
+                type: array
+                title: Response Get Integrations Status Integrations Status Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+      security:
+      - HTTPBearer: []
+  /orders/{order_id}/squads:
+    get:
+      tags:
+      - pedidos
+      summary: O que os outros squads informam sobre o pedido (WMS e Financeiro)
+      operationId: get_order_squads_orders__order_id__squads_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Order Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PainelSquadOut'
+                title: Response Get Order Squads Orders  Order Id  Squads Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /settings/integrations/{squad}/test:
+    post:
+      tags:
+      - configurações
+      summary: Testar a conexão com a URL configurada (equipe)
+      operationId: post_integration_test_settings_integrations__squad__test_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: squad
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Squad
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TesteIntegracaoOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
   /health:
     get:
       tags:
@@ -927,6 +1017,19 @@ components:
       - endereco
       - created_at
       title: CustomerOut
+    DetalheOut:
+      properties:
+        rotulo:
+          type: string
+          title: Rotulo
+        valor:
+          type: string
+          title: Valor
+      type: object
+      required:
+      - rotulo
+      - valor
+      title: DetalheOut
     FeedbackIn:
       properties:
         target:
@@ -1075,6 +1178,28 @@ components:
       - atualizado_em
       - atualizado_por
       title: IntegracaoOut
+    IntegracaoStatusOut:
+      properties:
+        squad:
+          type: string
+          title: Squad
+        nome:
+          type: string
+          title: Nome
+        funcao:
+          type: string
+          title: Funcao
+        modo:
+          type: string
+          title: Modo
+          description: configurada | simulada | nao_configurada | nao_prevista
+      type: object
+      required:
+      - squad
+      - nome
+      - funcao
+      - modo
+      title: IntegracaoStatusOut
     MeOut:
       properties:
         sub:
@@ -1179,6 +1304,41 @@ components:
       required:
       - status
       title: OrderStatusIn
+    PainelSquadOut:
+      properties:
+        squad:
+          type: string
+          title: Squad
+        titulo:
+          type: string
+          title: Titulo
+        fonte:
+          type: string
+          title: Fonte
+          description: integracao | simulado | indisponivel | nao_configurada
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+        detalhes:
+          items:
+            $ref: '#/components/schemas/DetalheOut'
+          type: array
+          title: Detalhes
+          default: []
+        mensagem:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Mensagem
+      type: object
+      required:
+      - squad
+      - titulo
+      - fonte
+      - status
+      title: PainelSquadOut
     PedidoStatus:
       type: string
       enum:
@@ -1269,6 +1429,31 @@ components:
       - valor_estimado
       - expires_at
       title: QuoteOut
+    TesteIntegracaoOut:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+        status_http:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Status Http
+        ms:
+          type: integer
+          title: Ms
+        erro:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Erro
+      type: object
+      required:
+      - ok
+      - status_http
+      - ms
+      - erro
+      title: TesteIntegracaoOut
     TicketDetailOut:
       properties:
         id:
