@@ -1,6 +1,8 @@
 name: Publicar portal (GitHub Pages)
 # Publica o front em https://<usuario>.github.io/<repositorio>/ a cada push na main que mexa em frontend/.
-# Configuração única (Settings → Pages → Source: "GitHub Actions") e variáveis do repositório (Settings → Secrets and variables → Actions → Variables):
+# Configuração única: Settings → Pages → Source: "GitHub Actions".
+# SEM variáveis, publica o MODO DEMONSTRAÇÃO (dados fictícios no navegador, faixa de aviso na tela).
+# COM as variáveis do repositório (Settings → Secrets and variables → Actions → Variables) publica o sistema REAL:
 #   VITE_API_URL, VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY   (a chave é a PUBLISHABLE; nunca a secret/service_role)
 on:
   push:
@@ -22,15 +24,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Conferir variáveis obrigatórias
+      - name: Definir modo (sistema real ou demonstração)
+        id: modo
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          for v in VITE_API_URL VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
-            if [ -z "$(printenv $v)" ]; then echo "::error::Variável $v não definida (Settings → Secrets and variables → Actions → Variables)"; exit 1; fi
-          done
+          if [ -n "$VITE_API_URL" ] && [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "demo=false" >> "$GITHUB_OUTPUT"
+            echo "Modo REAL: o portal usa a API em $VITE_API_URL"
+          else
+            echo "demo=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Variáveis do sistema real ausentes: publicando em MODO DEMONSTRAÇÃO (dados fictícios simulados no navegador)."
+          fi
       - uses: actions/setup-node@v4
         with: { node-version: "22", cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
@@ -39,6 +46,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_DEMO: ${{ steps.modo.outputs.demo }}
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}

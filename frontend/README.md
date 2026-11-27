@@ -28,6 +28,10 @@ npm install && npm run dev     # http://localhost:5173 (proxy /api -> http://loc
 Sem as variáveis do Supabase, o login pede um **token de desenvolvimento** (`python scripts/gen_token.py <sub> cliente`).
 Use apenas a chave **publishable**; nunca a `secret`/`service_role`.
 
+## Modo demonstração
+Build com `VITE_DEMO=true` (o workflow do Pages faz isso quando faltam as variáveis do sistema real): a API é simulada no navegador (`src/demo.js`), com dados fictícios, as mesmas regras (RN02, RN07, SLA) e uma faixa de aviso em todas as telas. Não envia nada a servidor algum.
+`VITE_DEMO=true npm run build`  ·  teste: `E2E_MODE=demo` em `tests/e2e`.
+
 ## Rastreamento
 Enquanto o squad Tracking não publica contrato, a API devolve um rastreamento **simulado** (`TRACKING_MOCK=true`), identificado na tela como "simulado (demonstração)".
 

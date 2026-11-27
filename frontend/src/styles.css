@@ -305,3 +305,6 @@ td a:hover { text-decoration: underline; }
   .linha { grid-template-columns: 1fr 1fr; row-gap: 1.2rem; } .linha li::after { display: none; }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.faixa-demo { background: var(--aviso-bg); color: var(--aviso); text-align: center; font-size: .88rem; font-weight: 600; padding: .45rem 1rem; }
+.col-demo { flex-direction: column; align-items: stretch; }
+.col-demo button { width: 100%; }

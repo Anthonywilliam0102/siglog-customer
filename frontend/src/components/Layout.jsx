@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
-import { sair } from '../session.js';
+import { sair, temDemo } from '../session.js';
 import { Logo } from './Icons.jsx';
 
 export default function Layout() {
@@ -15,6 +15,7 @@ export default function Layout() {
   return (
     <>
       <a className="pular" href="#conteudo">Pular para o conteúdo</a>
+      {temDemo && <div className="faixa-demo" role="note">Modo demonstração: os dados são fictícios e ficam só no seu navegador. Este não é o sistema em produção.</div>}
       <header className="topo">
         <Link to="/" className="marca" aria-label="SIG-Log Customer — início"><Logo /> <span>SIG-Log <b>Customer</b></span></Link>
         <nav aria-label="Principal">

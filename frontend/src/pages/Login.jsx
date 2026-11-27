@@ -4,7 +4,7 @@ import { Alerta } from '../components/ui.jsx';
 import Icon, { Logo } from '../components/Icons.jsx';
 import RouteArt from '../components/RouteArt.jsx';
 import { useAuth } from '../auth.jsx';
-import { entrar, entrarComTokenDev, temSupabase } from '../session.js';
+import { entrar, entrarComTokenDev, entrarDemo, temDemo, temSupabase } from '../session.js';
 
 // Atalhos só no modo de desenvolvimento (sem Supabase) e somente se as variáveis existirem no build local.
 const RAPIDOS = [['Entrar como cliente', import.meta.env.VITE_DEV_TOKEN_CLIENTE], ['Entrar como atendente', import.meta.env.VITE_DEV_TOKEN_ATENDENTE]]
@@ -55,7 +55,9 @@ export default function Login() {
             <h1>Entrar no portal</h1>
             <p className="muted">Use o e-mail e a senha do seu cadastro.</p>
           </div>
-          {temSupabase ? (
+          {temDemo ? (
+            <p className="alerta info">Modo demonstração: explore o portal com dados fictícios. Nada é enviado a nenhum servidor.</p>
+          ) : temSupabase ? (
             <>
               <label className="campo"><span>E-mail</span><input name="email" type="email" autoComplete="username" placeholder="voce@empresa.com" required /></label>
               <label className="campo"><span>Senha</span><input name="senha" type="password" autoComplete="current-password" placeholder="Sua senha" required /></label>
@@ -68,8 +70,15 @@ export default function Login() {
             </label>
           )}
           <Alerta>{erro}</Alerta>
-          <button className="primario" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
-          {!temSupabase && RAPIDOS.length > 0 && (
+          {temDemo ? (
+            <div className="acoes col-demo">
+              <button type="button" className="primario" onClick={() => entrarDemo('cliente')}>Entrar como cliente (demonstração)</button>
+              <button type="button" onClick={() => entrarDemo('atendente')}>Entrar como atendente (demonstração)</button>
+            </div>
+          ) : (
+            <button className="primario" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
+          )}
+          {!temSupabase && !temDemo && RAPIDOS.length > 0 && (
             <div className="acoes">
               {RAPIDOS.map(([rotulo, t]) => <button type="button" key={rotulo} onClick={() => entrarComTokenDev(t)}>{rotulo}</button>)}
             </div>

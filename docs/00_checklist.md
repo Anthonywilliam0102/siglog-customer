@@ -100,7 +100,9 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Publicação do front no GitHub Pages (`pages.yml`, subcaminho, variáveis) e `scripts/seed_demo.py` (dados de demonstração)
 - [ ] 👤 Pedir os contratos aos squads 01, 02, 03, 04 e 05 (mensagem pronta em `docs/20`, seção 4) e combinar RabbitMQ compartilhado
 - [ ] 👤 Rodar `scripts/consumir_eventos.py` contra o RabbitMQ e criar um pedido, para provar a entrega dos eventos
-- [ ] 👤 Habilitar o GitHub Pages, criar as 3 variáveis e publicar a API no Render (`docs/18_publicacao.md`)
+- [x] Modo demonstração do portal (API simulada no navegador, faixa de aviso) publicado pelo GitHub Pages quando faltam as variáveis; E2E 16/16 em modo demo e 17/17 em modo real
+- [ ] 👤 Habilitar o GitHub Pages (Settings → Pages → Source: GitHub Actions) para ter a URL de demonstração
+- [ ] 👤 Para o sistema REAL: criar as 3 variáveis do Pages e publicar a API no Render (`docs/18_publicacao.md`), ou usar o túnel do Cloudflare para mostrar o sistema local
 - [ ] 👤 Popular o banco da demo: `scripts/seed_demo.py --sim`
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
