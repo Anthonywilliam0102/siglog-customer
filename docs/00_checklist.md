@@ -110,6 +110,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Botão Voltar, avisos (toasts), confirmação antes de cancelar pedido, arrastar para rolar tabelas e menu, ícones no menu
 - [x] **Configurações** (equipe): URL da API por navegador + integrações com os outros squads (chave cifrada no servidor, nunca devolvida); migração 0003; 80 testes
 - [x] E2E: 23/23 no modo demonstração e 22/22 no modo real
+- [x] Login social no front (Google e GitHub, só aparecem os provedores ligados em `VITE_AUTH_PROVIDERS`); Apple descartada (US$ 99/ano)
+- [ ] 👤 Ligar os provedores: URL Configuration + GitHub OAuth App (e Google, se quiser) no Supabase (`docs/15_supabase.md`, 4.2) e a variável `VITE_AUTH_PROVIDERS`
 - [ ] 👤 Supabase: **Confirm email desligado** (e inscrição liberada) para o professor criar conta com e-mail fictício (`docs/15_supabase.md`, seção 4.1)
 - [ ] 👤 Merge do PR com estes ajustes; o Render sobe com `RUN_MIGRATIONS=true` e cria a tabela nova no Supabase
 

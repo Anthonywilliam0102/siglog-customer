@@ -5,7 +5,10 @@ import { createClient } from '@supabase/supabase-js';
 const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export const temSupabase = Boolean(url && key);
-export const supabase = temSupabase ? createClient(url, key) : null;
+export const supabase = temSupabase ? createClient(url, key, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true } }) : null;
+
+// Provedores de login social ligados neste build (VITE_AUTH_PROVIDERS=google,github). Só aparecem os que estiverem aqui.
+export const PROVEDORES = (import.meta.env.VITE_AUTH_PROVIDERS || '').split(',').map((p) => p.trim().toLowerCase()).filter((p) => ['google', 'github'].includes(p));
 
 const DEV = 'siglog_dev_token';
 const DEMO = 'siglog_demo_papel';
@@ -31,6 +34,14 @@ export async function entrar(email, senha) {
   if (error) {
     throw new Error(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message);
   }
+}
+
+// Login com Google/GitHub: o Supabase leva ao provedor e volta para esta página já com a sessão aberta.
+export async function entrarComProvedor(provedor) {
+  if (!supabase) throw new Error('Supabase não configurado');
+  const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`;
+  const { error } = await supabase.auth.signInWithOAuth({ provider: provedor, options: { redirectTo } });
+  if (error) throw new Error(/not enabled|unsupported/i.test(error.message || '') ? 'Este tipo de login ainda não foi ativado no sistema.' : (error.message || 'Não foi possível iniciar o login.'));
 }
 
 // Cria a conta no Supabase Auth. Conta nova = perfil `cliente` (papel de equipe só pelo servidor, em app_metadata).

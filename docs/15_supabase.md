@@ -45,6 +45,15 @@ O portal tem as abas **Entrar | Criar conta**. Toda conta nova entra com o perfi
 - Depois do Demoday, se quiser fechar as inscrições, desligue **Allow new users to sign up**.
 Contas de equipe (atendente/gestor) **não** nascem pelo portal: o perfil vem de `app_metadata.role` (SQL da seção 4).
 
+## 4.2 Login social (Google e GitHub)
+Os botões só aparecem para os provedores listados em `VITE_AUTH_PROVIDERS` (ex.: `github` ou `google,github`), e cada um precisa estar ligado no Supabase. A **Apple foi descartada** (exige o Apple Developer Program, US$ 99 por ano). Quem entra por um provedor vira **cliente**, como na conta por e-mail.
+1. **Supabase → Authentication → URL Configuration:** *Site URL* = a URL do portal (`https://<usuario>.github.io/<repositório>/`); em *Redirect URLs* adicione `https://<usuario>.github.io/<repositório>/**` e `http://localhost:5173/**`.
+2. **GitHub:** Settings → Developer settings → OAuth Apps → *New OAuth App*. *Homepage URL* = a URL do portal; *Authorization callback URL* = `https://<ref>.supabase.co/auth/v1/callback`. Copie o *Client ID* e gere um *Client secret*.
+3. **Google:** console.cloud.google.com → novo projeto → *APIs e serviços → Tela de consentimento OAuth* (tipo Externo, nome do app, e-mail de suporte; publique em "Produção", pois só pede e-mail e perfil) → *Credenciais → Criar credenciais → ID do cliente OAuth* (aplicativo da Web), com *URI de redirecionamento autorizado* = `https://<ref>.supabase.co/auth/v1/callback`. Copie o ID e o segredo.
+4. **Supabase → Authentication → Sign In / Providers:** abra GitHub e/ou Google, ligue, cole *Client ID* e *Secret* e salve.
+5. **GitHub do projeto:** Settings → Secrets and variables → Actions → Variables → `VITE_AUTH_PROVIDERS` = `github` (ou `google,github`) e rode de novo o workflow do Pages.
+Os segredos (*Client secret*) ficam **só** no painel do Supabase, nunca no repositório nem no chat. O ID do cliente é público.
+
 ## 5. Limitações do plano Free
 Projeto **pausa após cerca de 1 semana sem uso**: reative no painel antes do ensaio e do Demoday. Limite de 500 MB de dados, suficiente aqui.
 

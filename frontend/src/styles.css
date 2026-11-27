@@ -375,3 +375,8 @@ button.primario:active, .botao.primario:active { transform: scale(.98); }
 .login-pagina .abas { background: rgba(255, 255, 255, .06); }
 .integracao .duas { grid-template-columns: 1fr; }
 .integracao input { min-width: 0; }
+.ou { display: flex; align-items: center; gap: .75rem; color: var(--ink-mute); font-size: .82rem; }
+.ou::before, .ou::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.sociais { display: grid; gap: .6rem; }
+button.social { width: 100%; padding: .7rem 1rem; background: var(--solid-2); }
+button.social:hover { background: color-mix(in srgb, var(--accent) 10%, var(--solid-2)); }

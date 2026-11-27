@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Alerta } from '../components/ui.jsx';
-import { Logo } from '../components/Icons.jsx';
+import { IconeProvedor, Logo } from '../components/Icons.jsx';
 import RouteArt from '../components/RouteArt.jsx';
 import SeloEquipe from '../components/SeloEquipe.jsx';
 import { useAuth } from '../auth.jsx';
-import { criarConta, entrar, entrarComTokenDev, entrarDemo, temDemo, temSupabase } from '../session.js';
+import { criarConta, entrar, entrarComProvedor, entrarComTokenDev, entrarDemo, PROVEDORES, temDemo, temSupabase } from '../session.js';
+
+const NOME_PROVEDOR = { google: 'Google', github: 'GitHub' };
 
 // Atalhos só no modo de desenvolvimento (sem Supabase) e somente se as variáveis existirem no build local.
 const RAPIDOS = [['Entrar como cliente', import.meta.env.VITE_DEV_TOKEN_CLIENTE], ['Entrar como atendente', import.meta.env.VITE_DEV_TOKEN_ATENDENTE]]
@@ -20,6 +22,11 @@ export default function Login() {
   const [modo, setModo] = useState('entrar'); // 'entrar' | 'criar'
   const [aviso, setAviso] = useState('');
   if (!carregando && perfil) return <Navigate to="/" replace />;
+
+  async function social(provedor) {
+    setErro('');
+    try { await entrarComProvedor(provedor); } catch (err) { setErro(err.message); }
+  }
 
   async function enviar(e) {
     e.preventDefault();
@@ -96,6 +103,18 @@ export default function Login() {
           </div>
         ) : (
           <button className="primario" disabled={enviando}>{enviando ? (modo === 'criar' ? 'Criando conta…' : 'Entrando…') : (modo === 'criar' ? 'Criar conta' : 'Entrar')}</button>
+        )}
+        {temSupabase && !temDemo && PROVEDORES.length > 0 && (
+          <>
+            <div className="ou"><span>ou continue com</span></div>
+            <div className="sociais">
+              {PROVEDORES.map((p) => (
+                <button type="button" key={p} className="social" onClick={() => social(p)}>
+                  <IconeProvedor provedor={p} /> {modo === 'criar' ? 'Cadastrar' : 'Entrar'} com {NOME_PROVEDOR[p]}
+                </button>
+              ))}
+            </div>
+          </>
         )}
         {!temSupabase && !temDemo && RAPIDOS.length > 0 && (
           <div className="acoes">
