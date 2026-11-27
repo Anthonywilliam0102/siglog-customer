@@ -14,42 +14,82 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Convidar os 3 colegas ao repositório
 
 ## Fase 1 — Produto e UX (Encontros 1–2) — UI/UX lidera
-- [ ] docs/01_product_vision.md (Project Charter)
-- [ ] Matriz CSD
-- [ ] docs/03_personas.md
-- [ ] Mapa de Empatia
-- [ ] Protótipo Figma + teste de usabilidade
-- [ ] docs/02_requirements.md (requisitos funcionais e não funcionais)
+- [x] docs/01_product_vision.md (Project Charter) — rascunho, 👤 UI/UX revisar
+- [x] Matriz CSD (rascunho em `docs/16_ux_csd_empatia.md`) — 👤 validar com usuários
+- [x] docs/03_personas.md — rascunho, 👤 validar com pesquisa
+- [x] Mapa de Empatia (rascunho em `docs/16_ux_csd_empatia.md`) — 👤 validar com usuários
+- [ ] 👤 Protótipo Figma + teste de usabilidade (UI/UX)
+- [x] docs/02_requirements.md (RF, RNF, regras de negócio)
 
 ## Fase 2 — DDD e contratos (Encontros 3–6, Marco 1)
-- [ ] Event Storming
-- [ ] docs/04_ddd.md (agregados, comandos, eventos)
-- [ ] Bounded Context + docs/05_context_map.md
-- [ ] docs/06_architecture.md
-- [ ] openapi.yaml (endpoints A.6)
-- [ ] docs/08_events.md (catálogo: payload, produtor, consumidores)
-- [ ] ADR-001..005 (pasta docs/adr/)
+- [x] Event Storming (resumo em docs/04_ddd.md) — 👤 fazer a sessão visual com o time
+- [x] docs/04_ddd.md (agregados, comandos, eventos)
+- [x] Bounded Context + docs/05_context_map.md
+- [x] docs/06_architecture.md
+- [x] openapi.yaml (gerado do código)
+- [x] docs/08_events.md (catálogo) — eventos consumidos PENDENTES de alinhamento
+- [x] ADR-001..005 (docs/adr/)
 - [ ] 👤 Obter OpenAPI/Event Catalog dos outros squads e alinhar broker RabbitMQ
 
 ## Fase 3 — Código, banco, mensageria (Encontros 7–10, Marco 2)
-- [ ] Modelo de dados + migrações Alembic (docs/09_database.md)
-- [ ] 👤 Projeto Supabase criado (pessoa do banco); credenciais só em .env / GitHub Secrets
-- [ ] UC01–UC10 implementados
-- [ ] Publicação de eventos (PedidoCriado, SinistroRegistrado…)
-- [ ] Testes unitários, integração e contrato
-- [ ] Autenticação JWT + papéis (docs/11_security.md)
+- [x] Modelo de dados + migração Alembic 0001 (docs/09_database.md)
+- [x] Código preparado para o Supabase (SSL, pooler, RLS 0002, tokens ES256/HS256) — `docs/15_supabase.md`
+- [x] Projeto Supabase criado (região São Paulo, Data API desligada); `DATABASE_URL` e `SUPABASE_URL` só no `.env`
+- [x] Validado no Supabase (VS Code, 23/11): JWKS `ES256`; `migrate` até `0002`; 9 tabelas com RLS e sem policies; login real de cliente e atendente; `POST /customers` 201; `GET /customers/{id}` 200/200/401; RN02 → 403 (com token de dev)
+- [ ] 👤 (opcional, para a demo) criar `cliente2@exemplo.com` no Supabase e provar o 403 com login real
+- [ ] 👤 Criar o usuário atendente de verdade no padrão da equipe (hoje é `atendimento@exemplo.com`, com perfil `atendente`)
+- [x] UC01–UC10 implementados (API + regras RN01–RN06)
+- [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
+- [x] Testes unitários, integração e contrato (54 testes, SQLite)
+- [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
+- [x] Autenticação JWT + papéis (docs/11_security.md)
+- [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
+- [x] Esqueleto do front em `frontend/` (Vite + React; cotação e pedido) — 👤 Front evolui conforme o Figma
+- [x] API: `GET /me` e listagens (`/customers`, `/orders`, `/tickets`, `/claims`) com RN02, filtros e paginação (47 testes)
+- [x] Front completo em `frontend/`: login (Supabase Auth), cadastro, cotação/pedido, pedidos com rastreamento e avaliação, SAC com SLA, sinistros e fila do atendente. Testado ponta a ponta no navegador (21 verificações, cliente e atendente, desktop e celular)
+- [x] Rastreamento simulado (`TRACKING_MOCK`) e CORS configurável (`CORS_ORIGINS`) — 50 testes
+- [ ] 👤 Preencher `frontend/.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` e validar o login real no navegador
+- [ ] 👤 Ligar `TRACKING_MOCK=true` no `.env` para a demo mostrar rastreamento (o `.env.example` já traz)
+- [ ] 👤 Deploy do front no Cloudflare Pages (build: `npm run build`, diretório `frontend`, saída `dist`, var `VITE_API_URL`)
 
 ## Fase 4 — Observabilidade, segurança, carga (Encontros 11–14)
-- [ ] OpenTelemetry (traces → Jaeger) — docs/10_observability.md
-- [ ] Dashboard Grafana (geral + clientes, tickets, sinistros, SLA, satisfação)
+- [x] OpenTelemetry (traces → Jaeger) — docs/10_observability.md (👤 conferir traces no Jaeger com Docker)
+- [x] Dashboard Grafana (geral + domínio) provisionado automaticamente — 👤 conferir visualmente com Docker
 - [ ] 👤 SonarCloud: criar projeto e secret SONAR_TOKEN; ativar job no CI
 - [ ] Trivy bloqueante (exit-code 1)
-- [ ] Teste de carga K6 (100/500/1000 req/s) — docs/13_load_test.md
-- [ ] docs/12_atam.md (4 cenários)
+- [x] Script K6 pronto (tests/load/k6.js)
+- [ ] 👤 Executar K6 e preencher resultados em docs/13_load_test.md
+- [x] docs/12_atam.md (4 cenários)
+
+## Revisão do PR #1
+- [x] 9 achados do code-review corrigidos (commit antes da resposta, label de métricas, corrida 409, JWT com exp, worker resiliente, transições de status, CD após CI, portas em localhost, worker sem bloquear o loop)
+
+## Validação no Docker (VS Code, 23/11)
+- [x] Build, migrate (0001, 9 tabelas), Postgres, RabbitMQ, Prometheus, Grafana e Jaeger no ar
+- [x] Fluxo cliente → cotação → pedido, RN02 (403) e RN07 (422) confirmados; Outbox publicou 3 eventos no exchange `siglog.events`
+- [x] Corrigido: `httpx` movido para `requirements.txt` (a API caía em loop na imagem); worker com retry na conexão inicial; smoke test da imagem no CI
+- [ ] 👤 Reconstruir (`docker compose up -d --build`) e conferir API *healthy*, alvo do Prometheus *up* e dashboard do Grafana (login `admin` / `GRAFANA_ADMIN_PASSWORD` do `.env`, padrão `admin_dev`)
+- [ ] Criar fila ligada ao exchange para provar a entrega dos eventos (hoje só há publicação)
+- [x] Reconstruído com o `httpx` corrigido: API *healthy*, Prometheus com api e worker *up*, 6 eventos do Outbox publicados; `ruff` e 33 testes passando (Python 3.12)
+- [x] Jaeger: serviço `siglog-customer` com 20 traces (POST /customers, /quotes, /orders, GET, spans de banco) — confirmado no VS Code
+- [x] Grafana: login, datasource e dashboard provisionados; 9 de 12 painéis com dados (os 3 vazios por falta de tráfego, ver abaixo)
+- [ ] 👤 Gerar tickets, sinistros e avaliações e conferir os painéis *Tickets por status*, *Sinistros por status*, *Satisfação média*
+- [ ] 👤 Validar o retry do worker numa subida a frio (`docker compose down && up`) e criar uma fila ligada ao exchange para provar a entrega dos eventos
+- [ ] Worker sem tracing: o trace não atravessa API → worker (propagar `traceparent` no evento) — melhoria, não bloqueia o Demoday
+- Nota: *Disponibilidade* usa `avg_over_time(up[5m])`; cai abaixo de 1 quando a API reinicia dentro da janela (ex.: rebuild)
+
+## Publicação e entrega (Demoday 30/11)
+- [x] Correção do 401 intermitente após o login: tolerância de relógio de 30 s no JWT (causa provável: `iat` no futuro por relógio do container), motivo da falha no log e nova tentativa no front antes de deslogar — 54 testes
+- [x] Teste ponta a ponta do portal em `tests/e2e/` (17 verificações; modo Supabase ou dev)
+- [x] Configuração de publicação: `render.yaml`, `Dockerfile` com `PORT`, `scripts/start.sh`, `frontend/public/_redirects` e guia `docs/18_publicacao.md`
+- [ ] 👤 Rodar `tests/e2e` contra o Supabase real (login real; cria dados fictícios) e confirmar que o 401 sumiu
+- [ ] 👤 Publicar a API no Render e o front no Cloudflare Pages (`docs/18_publicacao.md`) e testar a URL pública
+- [ ] 👤 Merge do PR #1 na `main` e entrega ao repositório do professor
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)
 - [ ] Release Candidate (congelamento)
 - [ ] Release v1.0.0 (tag)
 - [ ] README final
-- [ ] Deck do Demoday
+- [x] Deck do Demoday (artefato Claude, 11 slides) — 👤 revisar, preencher nomes e resultados do K6
+- [x] docs/14_demoday_roteiro.md (roteiro e checklist de ensaio)

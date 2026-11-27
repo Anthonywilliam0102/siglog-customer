@@ -1,0 +1,22 @@
+# Blueprint da API no Render (plano gratuito). Os segredos NÃO ficam aqui: preencha no painel (sync: false).
+services:
+  - type: web
+    name: siglog-customer-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: ohio
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL        # Supabase, Session pooler (docs/15_supabase.md)
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: CORS_ORIGINS        # URL do front no Cloudflare Pages
+        sync: false
+      - key: TRACKING_MOCK
+        value: "true"
+      - key: RUN_MIGRATIONS
+        value: "false"           # o banco já está migrado; "true" aplica o Alembic ao subir
+      # Não defina JWT_SECRET: sem ele, tokens de desenvolvimento (HS256) são recusados e só valem os do Supabase.

@@ -1,0 +1,8 @@
+# Usa o Supabase como banco (em vez do Postgres local).
+# Uso:  docker compose -f docker-compose.yml -f docker-compose.supabase.yml up -d --build
+# Requer DATABASE_URL (Supabase) no .env. Ver docs/15_supabase.md.
+services:
+  postgres:
+    profiles: ["local-db"]   # não sobe com este override
+  migrate:
+    depends_on: !reset {}

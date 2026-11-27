@@ -1,0 +1,1308 @@
+openapi: 3.1.0
+info:
+  title: SIG-Log Customer
+  description: CRM, SAC & Portal do Cliente — Squad 06
+  version: 0.1.0
+paths:
+  /me:
+    get:
+      tags:
+      - sessão
+      summary: Quem sou eu (perfil do token)
+      operationId: get_me_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeOut'
+        '401':
+          description: Não autenticado
+      security:
+      - HTTPBearer: []
+  /customers:
+    get:
+      tags:
+      - clientes
+      summary: Listar clientes
+      operationId: list_customers_customers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerOut'
+                title: Response List Customers Customers Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - clientes
+      summary: UC01 – Cadastrar cliente
+      operationId: post_customer_customers_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+        '409':
+          description: Documento já cadastrado
+  /orders:
+    get:
+      tags:
+      - pedidos
+      summary: Listar pedidos
+      operationId: list_orders_orders_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PedidoStatus'
+          - type: 'null'
+          title: Status
+      - name: customer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Customer Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderOut'
+                title: Response List Orders Orders Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - pedidos
+      summary: UC03 – Criar pedido a partir de cotação
+      operationId: post_order_orders_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+        '409':
+          description: Cotação já usada
+  /tickets:
+    get:
+      tags:
+      - SAC
+      summary: Listar tickets
+      operationId: list_tickets_tickets_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/TicketStatus'
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketOut'
+                title: Response List Tickets Tickets Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - SAC
+      summary: UC06 – Abrir atendimento
+      operationId: post_ticket_tickets_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /claims:
+    get:
+      tags:
+      - sinistros
+      summary: Listar sinistros
+      operationId: list_claims_claims_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Itens por página (máx. 100)
+          default: 50
+          title: Limit
+        description: Itens por página (máx. 100)
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Itens a pular
+          default: 0
+          title: Offset
+        description: Itens a pular
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimOut'
+                title: Response List Claims Claims Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+    post:
+      tags:
+      - sinistros
+      summary: UC07 – Registrar sinistro
+      operationId: post_claim_claims_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /customers/{customer_id}:
+    get:
+      tags:
+      - clientes
+      summary: Get Customer
+      operationId: get_customer_customers__customer_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: customer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Customer Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /quotes:
+    post:
+      tags:
+      - cotações
+      summary: UC02 – Solicitar cotação
+      operationId: post_quote_quotes_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+      security:
+      - HTTPBearer: []
+  /orders/{order_id}:
+    get:
+      tags:
+      - pedidos
+      summary: UC04 – Consultar pedido
+      operationId: get_order_orders__order_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Order Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /orders/{order_id}/tracking:
+    get:
+      tags:
+      - pedidos
+      summary: UC05 – Consultar rastreamento
+      operationId: get_tracking_orders__order_id__tracking_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Order Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+        '503':
+          description: Tracking indisponível
+  /orders/{order_id}/status:
+    patch:
+      tags:
+      - pedidos
+      summary: (Equipe) Atualizar status do pedido
+      operationId: patch_order_status_orders__order_id__status_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Order Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /tickets/{ticket_id}:
+    get:
+      tags:
+      - SAC
+      summary: Get Ticket
+      operationId: get_ticket_tickets__ticket_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketDetailOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /tickets/{ticket_id}/messages:
+    post:
+      tags:
+      - SAC
+      summary: Responder ticket
+      operationId: post_ticket_message_tickets__ticket_id__messages_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /tickets/{ticket_id}/status:
+    patch:
+      tags:
+      - SAC
+      summary: (Equipe) Atualizar status do ticket
+      operationId: patch_ticket_status_tickets__ticket_id__status_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketStatusIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /claims/{claim_id}:
+    get:
+      tags:
+      - sinistros
+      summary: UC08 – Consultar sinistro
+      operationId: get_claim_claims__claim_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: claim_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Claim Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+  /feedback:
+    post:
+      tags:
+      - satisfação
+      summary: UC09/UC10 – Avaliar atendimento ou entrega
+      operationId: post_feedback_feedback_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+        '409':
+          description: Já avaliado
+      security:
+      - HTTPBearer: []
+  /health:
+    get:
+      tags:
+      - infra
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Health Health Get
+components:
+  schemas:
+    ClaimIn:
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        tipo:
+          type: string
+          maxLength: 30
+          minLength: 2
+          title: Tipo
+          examples:
+          - AVARIA
+        descricao:
+          type: string
+          minLength: 3
+          title: Descricao
+        valor_reclamado:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+          title: Valor Reclamado
+      type: object
+      required:
+      - order_id
+      - tipo
+      - descricao
+      - valor_reclamado
+      title: ClaimIn
+    ClaimOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        tipo:
+          type: string
+          title: Tipo
+        descricao:
+          type: string
+          title: Descricao
+        valor_reclamado:
+          type: string
+          title: Valor Reclamado
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - order_id
+      - customer_id
+      - tipo
+      - descricao
+      - valor_reclamado
+      - status
+      - created_at
+      title: ClaimOut
+    CustomerIn:
+      properties:
+        nome:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Nome
+          examples:
+          - Loja Exemplo Ltda
+        documento:
+          type: string
+          title: Documento
+          description: CPF (PF) ou CNPJ (PJ)
+          examples:
+          - '11222333000181'
+        tipo:
+          type: string
+          pattern: ^(PF|PJ)$
+          title: Tipo
+          examples:
+          - PJ
+        email:
+          type: string
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          examples:
+          - contato@exemplo.com
+        telefone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Telefone
+        endereco:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Endereco
+        owner_sub:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Owner Sub
+          description: 'Somente equipe: id do usuário dono do cadastro'
+      type: object
+      required:
+      - nome
+      - documento
+      - tipo
+      - email
+      title: CustomerIn
+    CustomerOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        nome:
+          type: string
+          title: Nome
+        documento:
+          type: string
+          title: Documento
+        tipo:
+          type: string
+          title: Tipo
+        email:
+          type: string
+          title: Email
+        telefone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Telefone
+        endereco:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Endereco
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - nome
+      - documento
+      - tipo
+      - email
+      - telefone
+      - endereco
+      - created_at
+      title: CustomerOut
+    FeedbackIn:
+      properties:
+        target:
+          $ref: '#/components/schemas/FeedbackTarget'
+        nota:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Nota
+        comentario:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comentario
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        ticket_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ticket Id
+      type: object
+      required:
+      - target
+      - nota
+      title: FeedbackIn
+    FeedbackOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        target:
+          $ref: '#/components/schemas/FeedbackTarget'
+        nota:
+          type: integer
+          title: Nota
+        comentario:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comentario
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        ticket_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ticket Id
+      type: object
+      required:
+      - id
+      - target
+      - nota
+      - comentario
+      - order_id
+      - ticket_id
+      title: FeedbackOut
+    FeedbackTarget:
+      type: string
+      enum:
+      - ENTREGA
+      - ATENDIMENTO
+      title: FeedbackTarget
+    MeOut:
+      properties:
+        sub:
+          type: string
+          title: Sub
+        role:
+          type: string
+          title: Role
+      type: object
+      required:
+      - sub
+      - role
+      title: MeOut
+    MessageIn:
+      properties:
+        mensagem:
+          type: string
+          minLength: 1
+          title: Mensagem
+      type: object
+      required:
+      - mensagem
+      title: MessageIn
+    MessageOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        author_role:
+          type: string
+          title: Author Role
+        mensagem:
+          type: string
+          title: Mensagem
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - author_role
+      - mensagem
+      - created_at
+      title: MessageOut
+    OrderIn:
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+          title: Quote Id
+      type: object
+      required:
+      - quote_id
+      title: OrderIn
+    OrderOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        quote_id:
+          type: string
+          format: uuid
+          title: Quote Id
+        status:
+          $ref: '#/components/schemas/PedidoStatus'
+        origem:
+          type: string
+          title: Origem
+        destino:
+          type: string
+          title: Destino
+        valor_estimado:
+          type: string
+          title: Valor Estimado
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - customer_id
+      - quote_id
+      - status
+      - origem
+      - destino
+      - valor_estimado
+      - created_at
+      title: OrderOut
+    OrderStatusIn:
+      properties:
+        status:
+          $ref: '#/components/schemas/PedidoStatus'
+      type: object
+      required:
+      - status
+      title: OrderStatusIn
+    PedidoStatus:
+      type: string
+      enum:
+      - CRIADO
+      - EM_SEPARACAO
+      - EM_TRANSPORTE
+      - ENTREGUE
+      - CANCELADO
+      title: PedidoStatus
+    Prioridade:
+      type: string
+      enum:
+      - ALTA
+      - MEDIA
+      - BAIXA
+      title: Prioridade
+    QuoteIn:
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        origem:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Origem
+        destino:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Destino
+        peso_kg:
+          type: number
+          maximum: 100000.0
+          exclusiveMinimum: 0.0
+          title: Peso Kg
+        volume_m3:
+          type: number
+          maximum: 1000.0
+          exclusiveMinimum: 0.0
+          title: Volume M3
+      type: object
+      required:
+      - customer_id
+      - origem
+      - destino
+      - peso_kg
+      - volume_m3
+      title: QuoteIn
+    QuoteOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        origem:
+          type: string
+          title: Origem
+        destino:
+          type: string
+          title: Destino
+        peso_kg:
+          type: number
+          title: Peso Kg
+        volume_m3:
+          type: number
+          title: Volume M3
+        valor_estimado:
+          type: string
+          title: Valor Estimado
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+      type: object
+      required:
+      - id
+      - customer_id
+      - origem
+      - destino
+      - peso_kg
+      - volume_m3
+      - valor_estimado
+      - expires_at
+      title: QuoteOut
+    TicketDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        categoria:
+          type: string
+          title: Categoria
+        prioridade:
+          $ref: '#/components/schemas/Prioridade'
+        assunto:
+          type: string
+          title: Assunto
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        sla_due_at:
+          type: string
+          format: date-time
+          title: Sla Due At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        messages:
+          items:
+            $ref: '#/components/schemas/MessageOut'
+          type: array
+          title: Messages
+          default: []
+      type: object
+      required:
+      - id
+      - customer_id
+      - order_id
+      - categoria
+      - prioridade
+      - assunto
+      - status
+      - sla_due_at
+      - created_at
+      title: TicketDetailOut
+    TicketIn:
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        categoria:
+          type: string
+          maxLength: 50
+          minLength: 2
+          title: Categoria
+          examples:
+          - ATRASO
+        prioridade:
+          $ref: '#/components/schemas/Prioridade'
+          default: MEDIA
+        assunto:
+          type: string
+          maxLength: 200
+          minLength: 3
+          title: Assunto
+        mensagem:
+          type: string
+          minLength: 1
+          title: Mensagem
+      type: object
+      required:
+      - customer_id
+      - categoria
+      - assunto
+      - mensagem
+      title: TicketIn
+    TicketOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        categoria:
+          type: string
+          title: Categoria
+        prioridade:
+          $ref: '#/components/schemas/Prioridade'
+        assunto:
+          type: string
+          title: Assunto
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        sla_due_at:
+          type: string
+          format: date-time
+          title: Sla Due At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - customer_id
+      - order_id
+      - categoria
+      - prioridade
+      - assunto
+      - status
+      - sla_due_at
+      - created_at
+      title: TicketOut
+    TicketStatus:
+      type: string
+      enum:
+      - ABERTO
+      - EM_ATENDIMENTO
+      - RESOLVIDO
+      title: TicketStatus
+    TicketStatusIn:
+      properties:
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+      type: object
+      required:
+      - status
+      title: TicketStatusIn
+    TrackingOut:
+      properties:
+        order_id:
+          type: string
+          title: Order Id
+        status:
+          type: string
+          title: Status
+        events:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Events
+          default: []
+      type: object
+      required:
+      - order_id
+      - status
+      title: TrackingOut
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
