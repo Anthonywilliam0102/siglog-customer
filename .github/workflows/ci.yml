@@ -37,6 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Simular checkout do Windows (CRLF no start.sh)
+        # Em Windows com core.autocrlf=true o script chega com CRLF; a imagem precisa suportar isso.
+        run: sed -i 's/$/\r/' scripts/start.sh && file scripts/start.sh
       - name: Docker build
         run: docker build -t siglog-customer:ci .
       - name: Smoke test da imagem (dependências de produção)

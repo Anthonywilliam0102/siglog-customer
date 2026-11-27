@@ -16,6 +16,9 @@ React 18 + Vite + React Router. Login pelo **Supabase Auth**; todos os dados vê
 
 O perfil (cliente, atendente, gestor) vem do token; o front só esconde opções, **a API é quem autoriza** (RN02).
 
+## Design
+Tokens de cor, raio e sombra em `src/styles.css` (`:root`, com tema escuro automático). Glassmorphism (`.vidro`) só em hero, login e estatísticas; tabelas e formulários ficam em fundo sólido para manter a leitura e o contraste. Animações respeitam `prefers-reduced-motion`. Ícones em SVG inline (`components/Icons.jsx`), sem dependência extra.
+
 ## Rodar
 ```bash
 cd frontend

@@ -82,7 +82,10 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Correção do 401 intermitente após o login: tolerância de relógio de 30 s no JWT (causa provável: `iat` no futuro por relógio do container), motivo da falha no log e nova tentativa no front antes de deslogar — 54 testes
 - [x] Teste ponta a ponta do portal em `tests/e2e/` (17 verificações; modo Supabase ou dev)
 - [x] Configuração de publicação: `render.yaml`, `Dockerfile` com `PORT`, `scripts/start.sh`, `frontend/public/_redirects` e guia `docs/18_publicacao.md`
-- [ ] 👤 Rodar `tests/e2e` contra o Supabase real (login real; cria dados fictícios) e confirmar que o 401 sumiu
+- [x] E2E contra o Supabase real: 16/16 OK; `/me` 200 em 200 chamadas após 10 logins, sem `auth_failed` (VS Code, `8b299db`)
+- [x] **Corrigido bug no Windows:** `scripts/start.sh` chegava com CRLF na imagem e a API caía em loop (`set: Illegal option -`). Correção: `.gitattributes` (`*.sh eol=lf`), `sed` no Dockerfile e passo no CI que simula o checkout do Windows
+- [x] Redesenho do portal: login com painel de marca, hero, vidro (glassmorphism) nas superfícies de destaque, estatísticas, ícones, hover/foco, linha do tempo do pedido, skeleton, tema escuro e celular. E2E 17/17 após o redesenho
+- [ ] 👤 Reconstruir (`docker compose ... up -d --build`) e confirmar que a API sobe sem o contorno de CRLF; conferir o visual novo no navegador
 - [ ] 👤 Publicar a API no Render e o front no Cloudflare Pages (`docs/18_publicacao.md`) e testar a URL pública
 - [x] PR #1 mergeado na `main` (commit `600be1b`); CI e publicação da imagem no GHCR passaram
 - [x] Script de entrega `scripts/exportar_para_professor.sh` e guia `docs/19_entrega_professor.md` (fork + PR)

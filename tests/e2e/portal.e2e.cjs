@@ -5,12 +5,12 @@
 //   E2E_MODE=supabase npm test
 // Modo desenvolvimento (token HS256 de scripts/gen_token.py; API com JWT_SECRET):
 //   E2E_MODE=dev E2E_TOKEN_CLIENTE=... E2E_TOKEN_ATENDENTE=... npm test
-// Opcional: E2E_BASE_URL (padrão http://127.0.0.1:5173), E2E_CHANNEL=chrome (usa o Chrome instalado), E2E_SHOTS=pasta.
+// Opcional: E2E_BASE_URL (padrão http://localhost:5173), E2E_CHANNEL=chrome (usa o Chrome instalado), E2E_SHOTS=pasta.
 // Nunca imprime senhas ou tokens. Cria dados de teste (cliente fictício, pedido, chamado, sinistro).
 const { chromium } = require('playwright');
 const fs = require('fs');
 
-const BASE = process.env.E2E_BASE_URL || 'http://127.0.0.1:5173';
+const BASE = process.env.E2E_BASE_URL || 'http://localhost:5173';
 const MODE = process.env.E2E_MODE || 'supabase';
 const SHOTS = process.env.E2E_SHOTS || '';
 const resultados = [];
