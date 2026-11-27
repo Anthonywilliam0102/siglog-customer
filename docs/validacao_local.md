@@ -161,3 +161,35 @@ Só leitura na API publicada: `/health` 200; hoje há 1 cliente, 12 pedidos, 8 c
 
 ### Estado ao final
 Stack local ainda apontando para o **Postgres local** (não voltou ao Supabase).
+
+## 2026-11-27 — Rodada 7: correção do pool (código `77771e5`)
+
+### Suíte e push — CONFIRMADO
+`ruff check .` limpo; `pytest`: **92 passed**. Commits anteriores enviados para `develop`.
+
+### Ambiente do K6
+API, worker e migrate no **banco local** (override temporário fora do repositório). `docker compose exec api env | grep DATABASE_URL`: host `postgres:5432` (credenciais omitidas); não é o Supabase. K6 na rede do Compose (`http://api:8000`), 60 s por cenário, uma execução de cada.
+Status por requisição obtidos com `--out csv` (o `k6.js` não foi alterado).
+
+### Resultados
+
+| Pool (size+overflow) | Cenário | req/s | p95 | p99 | % erro | 200/201 | 503 | sem resposta (60 s) | descartadas | thresholds |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 10+10 (padrão) | normal | 99,9 | 285 ms | 370 ms | 0,00% | 6001 | 0 | 0 | 0 | **passaram os três** |
+| 10+10 (padrão) | pico | 15,1 | 60 s | 60 s | 83,71% | 221 | 375 | 761 | 28405 | falharam |
+| 20+20 | normal | 98,9 | 249 ms | 757 ms | 0,00% | 6001 | 0 | 0 | 0 | **passaram os três** |
+| 20+20 | pico | 17,9 | 60 s | 60 s | 65,92% | 549 | 353 | 709 | 28139 | falharam |
+
+### Recuperação após o pico — CONFIRMADO (voltou sozinha, sem reinício)
+- 10+10: primeiro `200` estável (health e leitura) cerca de **120 s** depois do fim dos 60 s de carga.
+- 20+20: cerca de **105 s**.
+- Antes da correção a API não voltava (rodadas 5 e 6).
+
+### 503 rápidas no pico — FALHOU
+- 503 recebidas pelo K6: p50 **36 s** / p95 56 s (10+10); p50 **40 s** / p95 59 s (20+20). O esperado era falha rápida.
+- `/health` ficou sem resposta (limite de 5 s por tentativa) durante o pico e até cerca de 110 s (10+10) e 98 s (20+20) depois do fim da carga.
+- O pool continua esgotando: `db_pool_exhausted` 1248 (10+10) e 1098 (20+20) no log; `traceback` 0. A mensagem `QueuePool` não aparece mais porque a exceção é tratada. Boa parte das 503 foi emitida depois de o K6 já ter desistido.
+- **Hipótese (não comprovada):** as requisições esperam na fila do threadpool antes de chegar ao `pool_timeout`. O ritmo de `db_pool_exhausted` é compatível com cerca de 40 threads presas por 5 s cada, e aumentar o pool para 40 não eliminou o efeito. Vale o Claude da nuvem avaliar o ciclo entre rotas síncronas e o fechamento da sessão (`get_session`), e um limite de requisições simultâneas que recuse antes da fila.
+
+### Estado ao final
+API local com o pool padrão (10+10) e **banco local**. Tarefas 7 e 8 da rodada 6 (E2E e seed em produção) continuam sem OK, não executadas.
