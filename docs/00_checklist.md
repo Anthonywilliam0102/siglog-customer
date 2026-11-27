@@ -101,8 +101,8 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Pedir os contratos aos squads 01, 02, 03, 04 e 05 (mensagem pronta em `docs/20`, seção 4) e combinar RabbitMQ compartilhado
 - [ ] 👤 Rodar `scripts/consumir_eventos.py` contra o RabbitMQ e criar um pedido, para provar a entrega dos eventos
 - [x] Modo demonstração do portal (API simulada no navegador, faixa de aviso) publicado pelo GitHub Pages quando faltam as variáveis; E2E 16/16 em modo demo e 17/17 em modo real
-- [ ] 👤 Habilitar o GitHub Pages (Settings → Pages → Source: GitHub Actions) para ter a URL de demonstração
-- [ ] 👤 Para o sistema REAL: criar as 3 variáveis do Pages e publicar a API no Render (`docs/18_publicacao.md`), ou usar o túnel do Cloudflare para mostrar o sistema local
+- [x] GitHub Pages habilitado e publicado (27/11)
+- [x] **Sistema real no ar (27/11):** API no Render (`https://siglog-customer-api.onrender.com`, `/health` e `/docs` conferidos), variáveis do Pages criadas e site real em `https://anthonywilliam0102.github.io/siglog-customer/`, com Supabase
 - [ ] 👤 Popular o banco da demo: `scripts/seed_demo.py --sim`
 
 ## Rodada de ajustes do front (27/11)
@@ -111,9 +111,12 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] **Configurações** (equipe): URL da API por navegador + integrações com os outros squads (chave cifrada no servidor, nunca devolvida); migração 0003; 80 testes
 - [x] E2E: 23/23 no modo demonstração e 22/22 no modo real
 - [x] Login social no front (Google e GitHub, só aparecem os provedores ligados em `VITE_AUTH_PROVIDERS`); Apple descartada (US$ 99/ano)
-- [ ] 👤 Ligar os provedores: URL Configuration + GitHub OAuth App (e Google, se quiser) no Supabase (`docs/15_supabase.md`, 4.2) e a variável `VITE_AUTH_PROVIDERS`
-- [ ] 👤 Supabase: **Confirm email desligado** (e inscrição liberada) para o professor criar conta com e-mail fictício (`docs/15_supabase.md`, seção 4.1)
-- [ ] 👤 Merge do PR com estes ajustes; o Render sobe com `RUN_MIGRATIONS=true` e cria a tabela nova no Supabase
+- [x] GitHub ligado no Supabase (OAuth App, URL Configuration) e `VITE_AUTH_PROVIDERS=github`
+- [ ] 👤 (opcional) Google no login: 15 min, `docs/15_supabase.md` 4.2
+- [x] Supabase: Confirm email desligado, inscrição e provedor Email ligados (conferido por print)
+- [x] **Verificado pelo usuário no site real (27/11):** login com GitHub, criar conta com e-mail e senha, e Configurações → Integrações (confirma a migração 0003 no Supabase)
+- [ ] (obsoleto) Supabase: Confirm email desligado (e inscrição liberada) para o professor criar conta com e-mail fictício (`docs/15_supabase.md`, seção 4.1)
+- [x] PR #3 mergeado; o Render aplicou a migração 0003 no Supabase
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)

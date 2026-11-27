@@ -67,6 +67,6 @@ Instalar o `cloudflared`: `winget install Cloudflare.cloudflared`. A URL muda a 
 | Item | Situação |
 |---|---|
 | `render.yaml`, `Dockerfile` (PORT), `start.sh`, `_redirects` | CONFIRMADO no código; a imagem sobe na porta de `PORT` (smoke test no CI) |
-| `pages.yml` (GitHub Pages) e o front sob subcaminho `/<repositorio>/` | build e roteamento testados localmente; **o deploy em si NÃO VERIFICADO** (precisa habilitar o Pages e criar as variáveis) |
-| API no Render, CORS e URL do Supabase | **NÃO VERIFICADO** (dependem da conta do time) |
+| `pages.yml` (GitHub Pages) e o front sob subcaminho `/<repositorio>/` | **CONFIRMADO em 27/11**: publicado em `https://anthonywilliam0102.github.io/siglog-customer/`, modo real |
+| API no Render, CORS e URL do Supabase | **CONFIRMADO em 27/11** (`/health`, `/docs`; site real fazendo login, cadastro e Configurações) |
 | Limites do plano gratuito do Render e do Pages | **NÃO VERIFICADO** (podem ter mudado; confira nos painéis) |
