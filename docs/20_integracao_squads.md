@@ -38,6 +38,8 @@ Cada squad entrega o seu contrato **por Pull Request** na pasta dele: `contracts
 3. **Teste de contrato:** escrever em `tests/contract/` (modelo: `test_tracking_consumido.py`), garantindo que nossa camada anticorrupção entende o contrato.
 4. **Integrar de verdade:** apontar `TRACKING_BASE_URL` para o ambiente do squad e remover `TRACKING_MOCK`.
 
+**Configuração pela interface:** a equipe cadastra a URL e a chave de API de cada squad em **Configurações → Integrações** no portal. O servidor guarda a chave **cifrada** (`SETTINGS_ENCRYPTION_KEY`), exige URL `https` pública (bloqueia endereços internos) e nunca devolve a chave ao navegador. Hoje só o rastreamento (Squad 03) usa essa configuração; os demais squads ficam registrados para quando os contratos chegarem.
+
 **Hoje:** só existe `contracts/consumed/tracking/openapi.yaml`, **uma proposta nossa (não oficial)**. Os demais squads ainda não entregaram nada (**NÃO VERIFICADO**: confirmar com eles).
 
 ## 4. Mensagem pronta para enviar aos outros squads

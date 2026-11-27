@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
+import { useToast } from '../components/Toast.jsx';
+import Voltar from '../components/Voltar.jsx';
 import { Alerta, Cabecalho, Campo, Carregando } from '../components/ui.jsx';
 import { useCarga } from '../hooks.js';
 import { curto, TIPOS_SINISTRO } from '../lib.js';
 
 export default function NovoSinistro() {
   const nav = useNavigate();
+  const toast = useToast();
   const [params] = useSearchParams();
   const [pedido, setPedido] = useState(params.get('pedido') ?? '');
   const [erro, setErro] = useState('');
@@ -20,6 +23,7 @@ export default function NovoSinistro() {
     setOcupado(true);
     try {
       await api('/claims', { method: 'POST', body: { order_id: pedido, tipo: f.tipo, descricao: f.descricao, valor_reclamado: f.valor } });
+      toast.ok('Sinistro registrado.');
       nav('/sinistros');
     } catch (err) {
       setErro(err.message);
@@ -30,6 +34,7 @@ export default function NovoSinistro() {
   const elegiveis = (pedidos.dados ?? []).filter((p) => p.status !== 'CANCELADO');
   return (
     <div className="pagina estreita">
+      <Voltar para="/sinistros" />
       <Cabecalho titulo="Registrar sinistro" subtitulo="Informe o pedido afetado e o que aconteceu com a carga." />
       {pedidos.carregando ? <Carregando /> : (
         <form className="cartao" onSubmit={enviar}>

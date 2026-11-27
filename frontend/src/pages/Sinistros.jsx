@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { TabelaWrap } from '../components/Rolavel.jsx';
 import { Alerta, Cabecalho, Carregando, Selo, Vazio } from '../components/ui.jsx';
 import { useCarga } from '../hooks.js';
 import { brl, curto, dataHora } from '../lib.js';
@@ -14,7 +15,7 @@ export default function Sinistros() {
         acao={<Link className="botao primario" to="/sinistros/novo">Registrar sinistro</Link>} />
       <Alerta>{erro}</Alerta>
       {carregando ? <Carregando /> : !dados?.length ? <Vazio>Nenhum sinistro registrado.</Vazio> : (
-        <div className="tabela-wrap">
+        <TabelaWrap>
           <table>
             <thead><tr><th>Sinistro</th><th>Pedido</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Status</th><th>Registrado em</th></tr></thead>
             <tbody>
@@ -31,7 +32,7 @@ export default function Sinistros() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TabelaWrap>
       )}
     </div>
   );

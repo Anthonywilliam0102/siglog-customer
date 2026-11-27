@@ -13,6 +13,8 @@ React 18 + Vite + React Router. Login pelo **Supabase Auth**; todos os dados vê
 | `/chamados`, `/chamados/novo`, `/chamados/:id` | todos | SAC: abrir, conversar, SLA, avaliar atendimento |
 | `/sinistros`, `/sinistros/novo` | todos | registrar e acompanhar sinistros |
 | `/atendimento` | equipe | fila de chamados por prazo de SLA |
+| `/configuracoes` | equipe | trocar a URL da API (só neste navegador), cadastrar URL e chave de API dos outros squads (chave cifrada no servidor) e informações do sistema |
+| `/login` (aba *Criar conta*) | todos | cria conta no Supabase (perfil cliente) e leva ao cadastro |
 
 O perfil (cliente, atendente, gestor) vem do token; o front só esconde opções, **a API é quem autoriza** (RN02).
 

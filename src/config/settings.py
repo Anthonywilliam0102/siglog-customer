@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     supabase_url: str = ""  # ex.: https://<ref>.supabase.co (habilita tokens ES256/RS256 via JWKS)
     tracking_base_url: str = ""
     tracking_mock: bool = False  # demo: rastreamento simulado enquanto o contrato do Tracking não existe
+    # chave Fernet (urlsafe base64) para cifrar chaves de API de integração; vazio = não permite salvar chaves
+    settings_encryption_key: str = ""
     cors_origins: str = ""  # origens do front separadas por vírgula (ex.: https://portal.pages.dev)
     events_exchange: str = "siglog.events"
     otel_exporter_otlp_endpoint: str = ""  # vazio = tracing desligado

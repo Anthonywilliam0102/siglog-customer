@@ -11,6 +11,23 @@ const P = {
   clock: 'M12 7v5l3 2',
   shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z',
   inbox: 'M4 13l2-8h12l2 8 M4 13v6h16v-6 M4 13h5l1 2h4l1-2h5',
+  home: 'M3 11l9-8 9 8 M5 10v10h5v-6h4v6h5V10',
+  sliders: 'M4 6h8 M16 6h4 M4 12h2 M10 12h10 M4 18h10 M18 18h2',
+  back: 'M19 12H5 M11 6l-6 6 6 6',
+  cap: 'M2 9l10-5 10 5-10 5-10-5z M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5 M22 9v6',
+  key: 'M11 12l9-9 M16 7l3 3 M14 9l2 2',
+  plug: 'M9 2v6 M15 2v6 M6 8h12v4a6 6 0 0 1-12 0V8z M12 18v4',
+  info: 'M12 11v5 M12 8h.01',
+  link: 'M14 4h6v6 M20 4l-9 9 M18 14v5H5V6h5',
+  refresh: 'M20 11a8 8 0 0 0-14-4L4 9 M4 4v5h5 M4 13a8 8 0 0 0 14 4l2-2 M20 20v-5h-5',
+  x: 'M6 6l12 12 M18 6L6 18',
+};
+const EXTRA = {
+  sliders: [[14, 6, 2], [8, 12, 2], [16, 18, 2]],
+  key: [[8, 15, 4]],
+  info: [[12, 12, 9]],
+  clock: [[12, 12, 9]],
+  truck: [[7, 18, 2], [17, 18, 2]],
 };
 
 export default function Icon({ nome, tamanho = 22, ...resto }) {
@@ -18,8 +35,7 @@ export default function Icon({ nome, tamanho = 22, ...resto }) {
     <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" {...resto}>
       {P[nome].split(' M').map((d, i) => <path key={i} d={i ? `M${d}` : d} />)}
-      {nome === 'truck' && (<><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></>)}
-      {nome === 'clock' && <circle cx="12" cy="12" r="9" />}
+      {(EXTRA[nome] ?? []).map(([cx, cy, r], i) => <circle key={`c${i}`} cx={cx} cy={cy} r={r} />)}
     </svg>
   );
 }

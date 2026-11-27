@@ -3,7 +3,13 @@ import { ApiError } from './errors.js';
 import { getToken, sair, temDemo } from './session.js';
 
 // Em dev, '/api' é redirecionado pelo Vite para a API local. Em produção use VITE_API_URL.
-const BASE = import.meta.env.VITE_API_URL || '/api';
+export const CHAVE_API_URL = 'siglog_api_url';
+
+// A URL da API vem do build (VITE_API_URL) e pode ser trocada na tela de Configurações (fica só neste navegador).
+export function apiBase() {
+  if (!temDemo) { try { const o = localStorage.getItem(CHAVE_API_URL); if (o) return o; } catch { /* sem storage */ } }
+  return (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+}
 
 export { ApiError };
 
@@ -17,7 +23,7 @@ const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function enviar(path, method, body) {
   const token = await getToken();
-  return fetch(`${BASE}${path}`, {
+  return fetch(`${apiBase()}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,

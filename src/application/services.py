@@ -12,6 +12,8 @@ from src.domain.errors import Conflict, DomainError, Forbidden, NotFound
 from src.domain.rules import FeedbackTarget, PedidoStatus, Prioridade, Role, TicketStatus
 from src.infrastructure import models as m
 from src.infrastructure.clients.tracking import fetch_tracking, mock_tracking
+from src.infrastructure.clients.url_segura import validar_base_url
+from src.infrastructure.segredos import cifrar, decifrar
 
 
 @dataclass(frozen=True)
@@ -120,6 +122,11 @@ def consultar_pedido(session: Session, actor: Actor, order_id: uuid.UUID) -> m.O
 
 def consultar_rastreamento(session: Session, actor: Actor, order_id: uuid.UUID) -> dict:
     o = consultar_pedido(session, actor, order_id)
+    cfg = session.get(m.IntegrationSetting, "tracking")
+    base = cfg.base_url if cfg and cfg.base_url else None
+    if base:  # integração configurada na tela de Configurações: tem prioridade sobre o simulado
+        chave = decifrar(cfg.api_key_enc) if cfg.api_key_enc else None
+        return fetch_tracking(str(o.id), base, {cfg.header_name: chave} if chave else None)
     if settings.tracking_mock and not settings.tracking_base_url:
         return mock_tracking(o)
     return fetch_tracking(str(o.id))
@@ -283,3 +290,46 @@ def listar_tickets(session: Session, actor: Actor, status: TicketStatus | None =
 
 def listar_sinistros(session: Session, actor: Actor, limit: int = 50, offset: int = 0):
     return _listar(session, actor, m.Claim, limit=limit, offset=offset)
+
+
+# ---------- integrações com outros squads (Configurações) ----------
+SQUADS = {"wms": "Squad 01 · WMS & Estoque", "frota": "Squad 02 · Frota & Roteirização", "tracking": "Squad 03 · Rastreamento",
+          "financeiro": "Squad 04 · Financeiro", "rh": "Squad 05 · RH & Jornada"}
+
+
+def _so_equipe(actor: Actor) -> None:
+    if not actor.is_staff:
+        raise Forbidden("Apenas a equipe pode ver ou alterar as integrações")
+
+
+def _integracao_out(squad: str, cfg: m.IntegrationSetting | None) -> dict:
+    return {"squad": squad, "nome": SQUADS[squad], "base_url": cfg.base_url if cfg else None,
+            "header_name": cfg.header_name if cfg else "X-API-Key", "tem_chave": bool(cfg and cfg.api_key_enc),
+            "atualizado_em": cfg.updated_at if cfg else None, "atualizado_por": cfg.updated_by if cfg else None}
+
+
+def listar_integracoes(session: Session, actor: Actor) -> list[dict]:
+    _so_equipe(actor)
+    existentes = {c.squad: c for c in session.scalars(select(m.IntegrationSetting))}
+    return [_integracao_out(sq, existentes.get(sq)) for sq in SQUADS]
+
+
+def salvar_integracao(session: Session, actor: Actor, squad: str, base_url: str | None, header_name: str | None,
+                      api_key: str | None, limpar_chave: bool) -> dict:
+    """A chave de API é cifrada e nunca devolvida. `base_url` vazio remove a URL (volta ao padrão do servidor)."""
+    _so_equipe(actor)
+    if squad not in SQUADS:
+        raise NotFound("Squad não encontrado")
+    cfg = session.get(m.IntegrationSetting, squad) or m.IntegrationSetting(squad=squad, header_name="X-API-Key")
+    if base_url is not None:
+        cfg.base_url = validar_base_url(base_url) if base_url.strip() else None
+    if header_name:
+        cfg.header_name = header_name
+    if limpar_chave:
+        cfg.api_key_enc = None
+    if api_key:
+        cfg.api_key_enc = cifrar(api_key)
+    cfg.updated_by = actor.sub
+    session.add(cfg)
+    session.flush()
+    return _integracao_out(squad, cfg)

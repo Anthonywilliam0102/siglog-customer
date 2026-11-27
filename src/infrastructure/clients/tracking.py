@@ -23,11 +23,13 @@ class TrackingUnavailable(DomainError):
     status = 503
 
 
-def fetch_tracking(order_id: str) -> dict:
-    if not settings.tracking_base_url:
+def fetch_tracking(order_id: str, base_url: str | None = None, headers: dict | None = None) -> dict:
+    """`base_url`/`headers` vêm da configuração de integração (tela de Configurações); senão, da variável de ambiente."""
+    base = base_url or settings.tracking_base_url
+    if not base:
         raise TrackingUnavailable("Serviço de rastreamento não configurado")
     try:
-        r = httpx.get(f"{settings.tracking_base_url}/tracking/orders/{order_id}", timeout=3.0)
+        r = httpx.get(f"{base}/tracking/orders/{order_id}", timeout=3.0, headers=headers or {}, follow_redirects=False)
         r.raise_for_status()
         raw = r.json()
     except (httpx.HTTPError, ValueError) as exc:

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { TabelaWrap } from '../components/Rolavel.jsx';
 import { Alerta, Cabecalho, Carregando, Selo, SeloTicket, Vazio } from '../components/ui.jsx';
 import { useAuth } from '../auth.jsx';
 import { useCarga } from '../hooks.js';
@@ -8,7 +9,7 @@ import { curto, dataHora, sla, STATUS_TICKET } from '../lib.js';
 
 export function TabelaTickets({ tickets }) {
   return (
-    <div className="tabela-wrap">
+    <TabelaWrap>
       <table>
         <thead><tr><th>Chamado</th><th>Assunto</th><th>Categoria</th><th>Status</th><th>Prazo (SLA)</th><th>Aberto em</th></tr></thead>
         <tbody>
@@ -27,7 +28,7 @@ export function TabelaTickets({ tickets }) {
           })}
         </tbody>
       </table>
-    </div>
+    </TabelaWrap>
   );
 }
 

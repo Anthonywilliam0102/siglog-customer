@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { TabelaWrap } from '../components/Rolavel.jsx';
 import { Alerta, Cabecalho, Carregando, SeloPedido, Vazio } from '../components/ui.jsx';
 import { useAuth } from '../auth.jsx';
 import { useCarga } from '../hooks.js';
@@ -25,7 +26,7 @@ export default function Pedidos() {
       </div>
       <Alerta>{erro}</Alerta>
       {carregando ? <Carregando /> : !dados?.length ? <Vazio>Nenhum pedido encontrado.</Vazio> : (
-        <div className="tabela-wrap">
+        <TabelaWrap>
           <table>
             <thead><tr><th>Pedido</th><th>Rota</th><th>Status</th><th>Valor</th><th>Criado em</th></tr></thead>
             <tbody>
@@ -40,7 +41,7 @@ export default function Pedidos() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TabelaWrap>
       )}
     </div>
   );

@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
+import { useToast } from '../components/Toast.jsx';
+import Voltar from '../components/Voltar.jsx';
 import { Alerta, Cabecalho, Carregando, Estrelas, Selo, SeloTicket } from '../components/ui.jsx';
 import { useAuth } from '../auth.jsx';
 import { useCarga } from '../hooks.js';
 import { curto, dataHora, sla } from '../lib.js';
 
 function AvaliarAtendimento({ ticketId }) {
+  const toast = useToast();
   const [nota, setNota] = useState(0);
   const [feito, setFeito] = useState(false);
   const [erro, setErro] = useState('');
@@ -16,6 +19,7 @@ function AvaliarAtendimento({ ticketId }) {
     try {
       await api('/feedback', { method: 'POST', body: { target: 'ATENDIMENTO', nota, ticket_id: ticketId, comentario: new FormData(e.target).get('comentario') || null } });
       setFeito(true);
+      toast.ok('Avaliação registrada. Obrigado!');
     } catch (err) {
       if (err.status === 409) setFeito(true);
       else setErro(err.message);
@@ -41,6 +45,7 @@ export default function ChamadoDetalhe() {
   const { equipe } = useAuth();
   const { dados: t, erro, carregando, recarregar } = useCarga(() => api(`/tickets/${id}`), [id]);
   const [msgErro, setMsgErro] = useState('');
+  const toast = useToast();
   const [enviando, setEnviando] = useState(false);
 
   async function responder(e) {
@@ -51,6 +56,7 @@ export default function ChamadoDetalhe() {
     try {
       await api(`/tickets/${id}/messages`, { method: 'POST', body: { mensagem: new FormData(form).get('mensagem') } });
       form.reset();
+      toast.ok('Resposta enviada.');
       await recarregar();
     } catch (err) {
       setMsgErro(err.message);
@@ -63,6 +69,7 @@ export default function ChamadoDetalhe() {
     setMsgErro('');
     try {
       await api(`/tickets/${id}/status`, { method: 'PATCH', body: { status: novo } });
+      toast.ok(novo === 'RESOLVIDO' ? 'Chamado marcado como resolvido.' : 'Status atualizado.');
       recarregar();
     } catch (err) {
       setMsgErro(err.message);
@@ -75,6 +82,7 @@ export default function ChamadoDetalhe() {
 
   return (
     <div className="pagina estreita">
+      <Voltar para="/chamados" />
       <Cabecalho titulo={t.assunto} subtitulo={`Chamado #${curto(t.id)} · ${t.categoria} · prioridade ${t.prioridade.toLowerCase()}`}
         acao={<div className="acoes"><SeloTicket status={t.status} /><Selo tom={s.tom}>{s.texto}</Selo></div>} />
       {t.order_id && <p><Link to={`/pedidos/${t.order_id}`}>Ver pedido #{curto(t.order_id)}</Link></p>}

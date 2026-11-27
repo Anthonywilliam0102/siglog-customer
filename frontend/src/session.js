@@ -33,6 +33,22 @@ export async function entrar(email, senha) {
   }
 }
 
+// Cria a conta no Supabase Auth. Conta nova = perfil `cliente` (papel de equipe só pelo servidor, em app_metadata).
+// Devolve { logado: true } quando o Supabase já abre a sessão; { logado: false } se o projeto exigir confirmação por e-mail.
+export async function criarConta(email, senha) {
+  if (!supabase) throw new Error('Supabase não configurado');
+  const { data, error } = await supabase.auth.signUp({ email, password: senha });
+  if (error) {
+    const m = error.message || '';
+    if (/already registered|already been registered/i.test(m)) throw new Error('Já existe uma conta com este e-mail. Use a aba "Entrar".');
+    if (/password/i.test(m)) throw new Error('Senha fraca ou inválida. Use pelo menos 8 caracteres.');
+    if (/rate limit|too many/i.test(m)) throw new Error('Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.');
+    if (/signups? not allowed|disabled/i.test(m)) throw new Error('A criação de contas está desativada neste sistema.');
+    throw new Error(m || 'Não foi possível criar a conta.');
+  }
+  return { logado: Boolean(data.session) };
+}
+
 export function entrarComTokenDev(token) {
   guardar.gravar(token.trim());
   window.dispatchEvent(new Event('siglog:sessao'));

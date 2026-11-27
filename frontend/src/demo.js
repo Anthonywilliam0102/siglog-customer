@@ -32,7 +32,7 @@ function semente() {
     t('Alteração de endereço', 'OUTRO', 'BAIXA', 'RESOLVIDO', pedidos[0], 20, [m('cliente', 'Preciso alterar o endereço de entrega.', 20), m('atendente', 'Endereço atualizado conforme solicitado.', 19)]),
   ];
   const sinistros = [{ id: uid(), order_id: pedidos[3].id, customer_id: cid, tipo: 'AVARIA', descricao: 'Duas caixas chegaram amassadas.', valor_reclamado: '180.00', status: 'REGISTRADO', created_at: iso(agora - 2 * H) }];
-  return { clientes, cotacoes: [], pedidos, tickets, sinistros, avaliacoes: [{ target: 'ENTREGA', order_id: pedidos[3].id }] };
+  return { clientes, cotacoes: [], pedidos, tickets, sinistros, avaliacoes: [{ target: 'ENTREGA', order_id: pedidos[3].id }], integracoes: {} };
 }
 
 function carregar() {
@@ -48,26 +48,47 @@ const out = (o) => { const { owner_sub, ...resto } = o; return resto; }; // esli
 
 export async function demoApi(caminho, { method = 'GET', body } = {}, token) {
   await new Promise((r) => setTimeout(r, 120)); // sensação de rede
-  const papel = (token || '').split(':')[1];
-  if (!papel) throw new ApiError('Token ausente', 401);
+  const quem = (token || '').split(':')[1]; // 'cliente' | 'atendente' | 'novo' (conta criada na demonstração)
+  if (!quem) throw new ApiError('Token ausente', 401);
+  const papel = quem === 'novo' ? 'cliente' : quem;
+  const sub = `demo-${quem}`;
   const equipe = papel === 'atendente';
   const e = carregar();
   const [rota, qs = ''] = caminho.split('?');
   const q = new URLSearchParams(qs);
   const seg = rota.split('/').filter(Boolean);
   const limite = Number(q.get('limit') || 50);
-  const meu = (clienteId) => equipe || e.clientes.find((c) => c.id === clienteId)?.owner_sub === 'demo-cliente';
+  const meu = (clienteId) => equipe || e.clientes.find((c) => c.id === clienteId)?.owner_sub === sub;
   const nega = () => { throw new ApiError('Acesso negado', 403); };
   const nao = (x) => { throw new ApiError(`${x} não encontrado(a)`, 404); };
   const ordenar = (l) => [...l].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  if (seg[0] === 'me') return { sub: `demo-${papel}`, role: papel };
+  if (seg[0] === 'me') return { sub, role: papel };
+
+  if (seg[0] === 'settings' && seg[1] === 'integrations') {
+    if (!equipe) throw new ApiError('Apenas a equipe pode ver ou alterar as integrações', 403);
+    const NOMES = { wms: 'Squad 01 · WMS & Estoque', frota: 'Squad 02 · Frota & Roteirização', tracking: 'Squad 03 · Rastreamento', financeiro: 'Squad 04 · Financeiro', rh: 'Squad 05 · RH & Jornada' };
+    const vista = (sq) => { const c = (e.integracoes ??= {})[sq] ?? {}; return { squad: sq, nome: NOMES[sq], base_url: c.base_url ?? null, header_name: c.header_name ?? 'X-API-Key', tem_chave: !!c.tem_chave, atualizado_em: c.atualizado_em ?? null, atualizado_por: c.atualizado_por ?? null }; };
+    if (seg.length === 2) return Object.keys(NOMES).map(vista);
+    const sq = seg[2]; if (!NOMES[sq]) nao('Squad');
+    const c = ((e.integracoes ??= {})[sq] ??= {});
+    if (typeof body.base_url === 'string') {
+      const u = body.base_url.trim().replace(/\/$/, '');
+      if (u && !/^https:\/\/[^/\s]+/.test(u)) throw new ApiError('Use uma URL completa começando com https://', 422);
+      c.base_url = u || null;
+    }
+    if (body.header_name) c.header_name = body.header_name;
+    if (body.limpar_chave) c.tem_chave = false;
+    if (body.api_key) c.tem_chave = true; // a demonstração nem guarda o valor
+    c.atualizado_em = iso(Date.now()); c.atualizado_por = sub;
+    salvar(e); return vista(sq);
+  }
 
   if (seg[0] === 'customers') {
-    if (seg.length === 1 && method === 'GET') return e.clientes.filter((c) => equipe || c.owner_sub === 'demo-cliente').slice(0, limite).map(out);
+    if (seg.length === 1 && method === 'GET') return e.clientes.filter((c) => equipe || c.owner_sub === sub).slice(0, limite).map(out);
     if (seg.length === 1 && method === 'POST') {
       if (e.clientes.some((c) => c.documento === body.documento)) throw new ApiError('Já existe cliente com este documento', 409);
-      const c = { id: uid(), owner_sub: `demo-${papel}`, ...body, created_at: iso(Date.now()) };
+      const c = { id: uid(), owner_sub: sub, ...body, created_at: iso(Date.now()) };
       e.clientes.push(c); salvar(e); return out(c);
     }
     const c = e.clientes.find((x) => x.id === seg[1]); if (!c) nao('Cliente'); if (!meu(c.id)) nega(); return out(c);

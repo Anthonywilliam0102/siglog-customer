@@ -142,3 +142,18 @@ def get_claim(claim_id: uuid.UUID, session: Session = Depends(get_session), acto
              summary="UC09/UC10 – Avaliar atendimento ou entrega", responses={**ERR, 409: {"description": "Já avaliado"}})
 def post_feedback(body: s.FeedbackIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
     return commit(session, svc.avaliar(session, actor, **body.model_dump()))
+
+
+@router.get("/settings/integrations", response_model=list[s.IntegracaoOut], tags=["configurações"],
+            summary="Integrações com outros squads (equipe)", responses=ERR)
+def list_integrations(session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.listar_integracoes(session, actor)
+
+
+@router.put("/settings/integrations/{squad}", response_model=s.IntegracaoOut, tags=["configurações"],
+            summary="Salvar URL e chave de API de um squad (equipe)",
+            responses={**ERR, 409: {"description": "SETTINGS_ENCRYPTION_KEY não configurada no servidor"}})
+def put_integration(squad: str, body: s.IntegracaoIn, session: Session = Depends(get_session),
+                    actor: Actor = Depends(get_actor)):
+    salvo = svc.salvar_integracao(session, actor, squad, body.base_url, body.header_name, body.api_key, body.limpar_chave)
+    return commit(session, salvo)

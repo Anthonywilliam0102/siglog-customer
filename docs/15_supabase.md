@@ -38,6 +38,13 @@ O papel é lido de `app_metadata` (só o servidor altera). **Nunca** de `user_me
 - **Validação do token:** projetos novos assinam com ES256 (JWKS, via `SUPABASE_URL`); projetos antigos usam HS256 com o *JWT Secret* (`JWT_SECRET`). A API aceita os dois.
 - O front usa `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (a chave **anon** é pública por desenho).
 
+## 4.1 Criar conta pelo portal (para o professor testar)
+O portal tem as abas **Entrar | Criar conta**. Toda conta nova entra com o perfil **cliente** (menor privilégio) e cai no cadastro (CPF/CNPJ). Para funcionar com e-mails fictícios, ajuste uma vez no Supabase:
+- **Authentication → Sign In / Providers → Email**: deixe **Allow new users to sign up** ligado e **Confirm email desligado** (senão o Supabase tenta enviar um e-mail de confirmação, que um endereço fictício nunca recebe, e o envio tem limite por hora).
+- Defina o tamanho mínimo da senha (o portal exige 8 caracteres).
+- Depois do Demoday, se quiser fechar as inscrições, desligue **Allow new users to sign up**.
+Contas de equipe (atendente/gestor) **não** nascem pelo portal: o perfil vem de `app_metadata.role` (SQL da seção 4).
+
 ## 5. Limitações do plano Free
 Projeto **pausa após cerca de 1 semana sem uso**: reative no painel antes do ensaio e do Demoday. Limite de 500 MB de dados, suficiente aqui.
 

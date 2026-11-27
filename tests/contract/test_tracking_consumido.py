@@ -32,7 +32,7 @@ def test_exemplo_do_contrato_e_valido_pelo_proprio_schema():
 
 def test_acl_traduz_o_exemplo_do_contrato(monkeypatch):
     monkeypatch.setattr(settings, "tracking_base_url", "http://tracking.invalid")
-    monkeypatch.setattr(tracking.httpx, "get", lambda url, timeout: _Resposta(RESP["example"]))
+    monkeypatch.setattr(tracking.httpx, "get", lambda url, timeout, **kw: _Resposta(RESP["example"]))
     r = tracking.fetch_tracking("6d2331ec-0a1b-4c2d-8e3f-4a5b6c7d8e9f")
     assert r["status"] == "Em trânsito" and len(r["events"]) == 2 and r["source"] == "tracking"
 
@@ -45,7 +45,7 @@ def test_todo_status_do_contrato_tem_texto_para_o_cliente(status):
 def test_url_chamada_segue_o_caminho_do_contrato(monkeypatch):
     chamadas = []
     monkeypatch.setattr(settings, "tracking_base_url", "http://tracking.invalid")
-    monkeypatch.setattr(tracking.httpx, "get", lambda url, timeout: chamadas.append(url) or _Resposta(RESP["example"]))
+    monkeypatch.setattr(tracking.httpx, "get", lambda url, timeout, **kw: chamadas.append(url) or _Resposta(RESP["example"]))
     tracking.fetch_tracking("abc")
     assert chamadas == ["http://tracking.invalid/tracking/orders/abc"]
     assert "/tracking/orders/{order_id}" in CONTRATO["paths"]
