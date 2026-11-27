@@ -32,7 +32,7 @@ export default function Conta() {
           {cliente.telefone && <Linha rotulo="Telefone">{cliente.telefone}</Linha>}
           {cliente.endereco && <Linha rotulo="Endereço">{cliente.endereco}</Linha>}
           <Linha rotulo="Cliente desde">{dataHora(cliente.created_at)}</Linha>
-          <p className="muted">Para corrigir algum dado, <Link to="/chamados/novo">abra um chamado</Link> e a equipe atualiza para você.</p>
+          <p className="muted">Para corrigir algum dado, <Link to="/chamados/novo">fale conosco</Link> e a equipe atualiza para você.</p>
         </section>
       )}
 

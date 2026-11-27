@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useToast } from '../components/Toast.jsx';
@@ -47,6 +47,17 @@ export default function ChamadoDetalhe() {
   const [msgErro, setMsgErro] = useState('');
   const toast = useToast();
   const [enviando, setEnviando] = useState(false);
+  const fim = useRef(null);
+  const total = t?.messages?.length ?? 0;
+  const aberto = t && t.status !== 'RESOLVIDO';
+
+  // Como num chat: atualiza sozinho a cada 8 s enquanto o chamado está aberto e rola até a última mensagem.
+  useEffect(() => {
+    if (!aberto) return undefined;
+    const timer = setInterval(() => { if (!document.hidden) recarregar({ silencioso: true }); }, 8000);
+    return () => clearInterval(timer);
+  }, [aberto, id]);
+  useEffect(() => { fim.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }); }, [total]);
 
   async function responder(e) {
     e.preventDefault();
@@ -88,17 +99,24 @@ export default function ChamadoDetalhe() {
       {t.order_id && <p><Link to={`/pedidos/${t.order_id}`}>Ver pedido #{curto(t.order_id)}</Link></p>}
 
       <section className="conversa" aria-label="Mensagens">
-        {t.messages.map((m, i) => (
-          <article key={i} className={`mensagem ${m.author_role === 'cliente' ? 'cliente' : 'equipe'}`}>
-            <header><b>{m.author_role === 'cliente' ? 'Cliente' : 'Atendimento'}</b> · <time>{dataHora(m.created_at)}</time></header>
-            <p>{m.mensagem}</p>
-          </article>
-        ))}
+        {t.messages.map((m, i) => {
+          const tipo = m.author_role === 'sistema' ? 'sistema' : m.author_role === 'cliente' ? 'cliente' : 'equipe';
+          const nome = { sistema: 'Assistente automático', cliente: 'Cliente', equipe: 'Atendimento' }[tipo];
+          return (
+            <article key={m.id ?? i} className={`mensagem ${tipo}`}>
+              <header><b>{nome}</b> · <time>{dataHora(m.created_at)}</time></header>
+              <p>{m.mensagem}</p>
+            </article>
+          );
+        })}
+        <div ref={fim} />
       </section>
 
       {t.status !== 'RESOLVIDO' ? (
         <form className="cartao" onSubmit={responder}>
-          <label className="campo"><span>Responder</span><textarea name="mensagem" rows={3} required /></label>
+          <label className="campo"><span>Responder</span>
+            <textarea name="mensagem" rows={3} required placeholder="Escreva sua mensagem… (Enter envia, Shift+Enter quebra a linha)"
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.form.requestSubmit(); } }} /></label>
           <div className="acoes">
             <button className="primario" disabled={enviando}>{enviando ? 'Enviando…' : 'Enviar resposta'}</button>
             {equipe && <button type="button" onClick={() => status('RESOLVIDO')}>Marcar como resolvido</button>}

@@ -146,6 +146,14 @@ paths:
           default: 0
           title: Offset
         description: Itens a pular
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
       responses:
         '200':
           description: Successful Response
@@ -430,6 +438,14 @@ paths:
           type: string
           format: uuid
           title: Order Id
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
       responses:
         '200':
           description: Successful Response
@@ -836,6 +852,91 @@ paths:
           description: Não encontrado
         '422':
           description: Regra de negócio/validação
+  /settings/api-keys:
+    get:
+      tags:
+      - configurações
+      summary: Listar chaves emitidas (sem o valor)
+      operationId: list_api_keys_settings_api_keys_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ChaveApiOut'
+                type: array
+                title: Response List Api Keys Settings Api Keys Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - configurações
+      summary: Emitir chave de API para outro squad consultar pedidos (equipe)
+      operationId: post_api_key_settings_api_keys_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChaveApiIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChaveApiCriadaOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+      security:
+      - HTTPBearer: []
+  /settings/api-keys/{key_id}:
+    delete:
+      tags:
+      - configurações
+      summary: Revogar chave emitida
+      operationId: delete_api_key_settings_api_keys__key_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: key_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Key Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChaveApiOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
   /health:
     get:
       tags:
@@ -853,6 +954,112 @@ paths:
                 title: Response Health Health Get
 components:
   schemas:
+    ChaveApiCriadaOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        squad:
+          type: string
+          title: Squad
+        nome:
+          type: string
+          title: Nome
+        prefixo:
+          type: string
+          title: Prefixo
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        last_used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Used At
+        chave:
+          type: string
+          title: Chave
+          description: Aparece UMA única vez; guarde agora
+      type: object
+      required:
+      - id
+      - squad
+      - nome
+      - prefixo
+      - created_at
+      - revoked_at
+      - last_used_at
+      - chave
+      title: ChaveApiCriadaOut
+    ChaveApiIn:
+      properties:
+        squad:
+          type: string
+          title: Squad
+          examples:
+          - wms
+        nome:
+          type: string
+          maxLength: 80
+          minLength: 3
+          title: Nome
+          examples:
+          - Integração do WMS (produção)
+      type: object
+      required:
+      - squad
+      - nome
+      title: ChaveApiIn
+    ChaveApiOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        squad:
+          type: string
+          title: Squad
+        nome:
+          type: string
+          title: Nome
+        prefixo:
+          type: string
+          title: Prefixo
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        last_used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Used At
+      type: object
+      required:
+      - id
+      - squad
+      - nome
+      - prefixo
+      - created_at
+      - revoked_at
+      - last_used_at
+      title: ChaveApiOut
     ClaimIn:
       properties:
         order_id:
@@ -1192,7 +1399,7 @@ components:
         modo:
           type: string
           title: Modo
-          description: configurada | simulada | nao_configurada | nao_prevista
+          description: configurada | simulada | nao_configurada
       type: object
       required:
       - squad

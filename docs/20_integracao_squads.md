@@ -68,3 +68,11 @@ Cada squad entrega o seu contrato **por Pull Request** na pasta dele: `contracts
 | Contratos dos squads 01, 02, 04, 05 | **PENDENTE** (nada recebido) |
 | Contrato oficial do squad 03 | **PENDENTE** (usamos uma proposta nossa) |
 | Broker compartilhado, auth entre serviços, ambiente de integração | **PENDENTE** de decisão entre os squads |
+
+
+## Chave de API do CRM para os outros squads (entrada)
+Na aba **Integrações → Nossa API** (só equipe) geramos uma chave por squad. O outro squad envia `X-API-Key: sk_...` em `GET /orders` e `GET /orders/{id}`.
+- **Somente leitura**: nas demais rotas a chave é recusada (401); só essas duas rotas aceitam `X-API-Key`.
+- A chave aparece **uma única vez** ao ser gerada; no banco guardamos só o hash SHA-256 (`api_keys`, migração 0004, RLS ligada). Dá para revogar e ver o último uso.
+- Escopo hoje equivale a "ver todos os pedidos" (visão de gestor, só nessas rotas). **NÃO VERIFICADO** com os squads se precisam de mais rotas.
+- Entregue a chave por canal seguro (nunca no chat público nem no Git). Em produção, aplicar a migração 0004 (o Render faz isso com `RUN_MIGRATIONS=true`).

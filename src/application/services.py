@@ -1,6 +1,7 @@
 """Casos de uso UC01–UC10. A `Session` do SQLAlchemy atua como Unit of Work (ver ADR-001)."""
 import uuid
 from dataclasses import dataclass
+from datetime import timedelta
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -164,6 +165,11 @@ def abrir_ticket(session: Session, actor: Actor, customer_id: uuid.UUID, categor
     session.flush()
     session.add(m.TicketMessage(ticket_id=t.id, author_sub=actor.sub, author_role=actor.role,
                                 mensagem=mensagem))
+    horas = round((t.sla_due_at - rules.utcnow()).total_seconds() / 3600)
+    session.add(m.TicketMessage(  # resposta automática: confirma o recebimento e informa o prazo (SLA)
+        ticket_id=t.id, author_sub="sistema", author_role="sistema", created_at=rules.utcnow() + timedelta(milliseconds=5),
+        mensagem=f"Recebemos o seu chamado. Prioridade {prioridade.value.lower()}: nossa equipe responde em até {horas} h. "
+                 "Aguarde, vamos falar com você por aqui. Pode enviar novas informações a qualquer momento."))
     _emit(session, "ChamadoAberto", {
         "ticket_id": str(t.id), "cliente_id": str(customer_id),
         "pedido_id": str(order_id) if order_id else None,
@@ -338,10 +344,10 @@ def salvar_integracao(session: Session, actor: Actor, squad: str, base_url: str 
 
 FUNCAO_SQUAD = {
     "wms": "Mostra no pedido o andamento da separação no centro de distribuição.",
-    "frota": "Sem integração direta prevista com o CRM.",
+    "frota": "Reservado: contrato ainda não definido com o Squad 02 (pode consumir o evento EntregaAvaliada).",
     "tracking": "Mostra o rastreamento do pedido (posição e eventos de entrega).",
     "financeiro": "Mostra no pedido a cobrança e o frete.",
-    "rh": "Sem integração direta prevista com o CRM.",
+    "rh": "Reservado: contrato ainda não definido com o Squad 05.",
 }
 
 
@@ -350,11 +356,9 @@ def status_integracoes(session: Session, actor: Actor) -> list[dict]:
     cfg = {c.squad: c for c in session.scalars(select(m.IntegrationSetting))}
     saida = []
     for sq, nome in SQUADS.items():
-        if sq in ("frota", "rh"):
-            modo = "nao_prevista"
-        elif cfg.get(sq) and cfg[sq].base_url:
+        if cfg.get(sq) and cfg[sq].base_url:
             modo = "configurada"
-        elif settings.tracking_mock:
+        elif settings.tracking_mock and sq in ("wms", "tracking", "financeiro"):
             modo = "simulada"
         else:
             modo = "nao_configurada"
@@ -402,3 +406,47 @@ def testar_integracao(session: Session, actor: Actor, squad: str) -> dict:
     except httpx.HTTPError:
         return {"ok": False, "status_http": None, "ms": ms(),
                 "erro": "Não foi possível conectar ao endereço configurado."}
+
+
+# ---------- chaves de API emitidas por nós (outros squads chamam o CRM) ----------
+def _hash_chave(chave: str) -> str:
+    import hashlib
+
+    return hashlib.sha256(chave.encode()).hexdigest()
+
+
+def criar_chave_api(session: Session, actor: Actor, squad: str, nome: str) -> tuple[m.ApiKey, str]:
+    """Gera a chave (devolvida UMA vez, em claro); no banco fica só o hash SHA-256."""
+    import secrets
+
+    _so_equipe(actor)
+    if squad not in SQUADS:
+        raise NotFound("Squad não encontrado")
+    chave = "sk_" + secrets.token_urlsafe(32)
+    reg = m.ApiKey(squad=squad, nome=nome.strip(), prefixo=chave[:8], key_hash=_hash_chave(chave), created_by=actor.sub)
+    session.add(reg)
+    session.flush()
+    return reg, chave
+
+
+def listar_chaves_api(session: Session, actor: Actor) -> list[m.ApiKey]:
+    _so_equipe(actor)
+    return list(session.scalars(select(m.ApiKey).order_by(m.ApiKey.created_at.desc())))
+
+
+def revogar_chave_api(session: Session, actor: Actor, key_id: uuid.UUID) -> m.ApiKey:
+    _so_equipe(actor)
+    reg = _get(session, m.ApiKey, key_id, "Chave")
+    if reg.revoked_at is None:
+        reg.revoked_at = rules.utcnow()
+    return reg
+
+
+def ator_da_chave(session: Session, chave: str) -> Actor | None:
+    """Valida uma chave emitida por nós. Escopo: somente leitura de pedidos (rotas que aceitam a chave)."""
+    reg = session.scalar(select(m.ApiKey).where(m.ApiKey.key_hash == _hash_chave(chave), m.ApiKey.revoked_at.is_(None)))
+    if reg is None:
+        return None
+    reg.last_used_at = rules.utcnow()
+    session.commit()
+    return Actor(sub=f"squad:{reg.squad}", role=Role.GESTOR)

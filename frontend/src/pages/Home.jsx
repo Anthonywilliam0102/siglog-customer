@@ -77,7 +77,7 @@ export default function Home() {
           ? <Atalho to="/atendimento" icone="shield" titulo="Fila de atendimento" sub={`${abertos.length} abertos · ${vencidos} com SLA vencido`} />
           : <Atalho to="/cotacao" icone="calc" titulo="Nova cotação" sub="Veja o valor e crie um pedido" />}
         <Atalho to="/pedidos" icone="box" titulo="Pedidos" sub="Status e rastreamento" />
-        <Atalho to="/chamados/novo" icone="chat" titulo="Abrir chamado" sub="Fale com o SAC" />
+        <Atalho to="/chamados/novo" icone="headset" titulo="Fale conosco" sub="Chat com o atendimento" />
         <Atalho to="/sinistros/novo" icone="alert" titulo="Registrar sinistro" sub="Avaria ou extravio" />
       </div>
 

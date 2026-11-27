@@ -12,12 +12,15 @@ import logging
 from functools import lru_cache
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
 
+from src.application import services as svc
 from src.application.services import Actor
 from src.config.settings import settings
 from src.domain.rules import Role
+from src.infrastructure.db import get_session
 
 bearer = HTTPBearer(auto_error=False)
 log = logging.getLogger(__name__)
@@ -59,3 +62,14 @@ def get_actor(creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -> A
         # Registra só o tipo do erro (nunca o token) para diagnosticar 401 intermitente.
         log.warning('{"event": "auth_failed", "level": "WARNING", "reason": "%s"}', type(exc).__name__)
         raise HTTPException(401, "Token inválido") from exc
+
+
+def get_actor_ou_chave(creds: HTTPAuthorizationCredentials | None = Depends(bearer),
+                       x_api_key: str | None = Header(None), session: Session = Depends(get_session)) -> Actor:
+    """Só para rotas de LEITURA que os outros squads podem chamar: aceita `X-API-Key` (emitida por nós) ou o JWT."""
+    if x_api_key:
+        ator = svc.ator_da_chave(session, x_api_key)
+        if ator is None:
+            raise HTTPException(401, "Chave de API inválida ou revogada")
+        return ator
+    return get_actor(creds)

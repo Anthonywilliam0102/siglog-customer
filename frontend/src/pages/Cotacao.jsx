@@ -5,6 +5,7 @@ import { useToast } from '../components/Toast.jsx';
 import Voltar from '../components/Voltar.jsx';
 import { Alerta, Campo, Cabecalho } from '../components/ui.jsx';
 import SeletorCliente, { useClienteId } from '../components/SeletorCliente.jsx';
+import CampoCidade from '../components/CampoCidade.jsx';
 import { brl, dataHora } from '../lib.js';
 
 export default function Cotacao() {
@@ -54,8 +55,8 @@ export default function Cotacao() {
         <form className="cartao" onSubmit={cotar}>
           <SeletorCliente valor={escolhido} onChange={setEscolhido} />
           <div className="duas">
-            <Campo label="Origem"><input name="origem" required minLength={2} placeholder="São Paulo/SP" /></Campo>
-            <Campo label="Destino"><input name="destino" required minLength={2} placeholder="Recife/PE" /></Campo>
+            <Campo label="Origem"><CampoCidade name="origem" placeholder="Escolha ou digite a cidade" /></Campo>
+            <Campo label="Destino"><CampoCidade name="destino" placeholder="Escolha ou digite a cidade" /></Campo>
           </div>
           <div className="duas">
             <Campo label="Peso (kg)"><input name="peso" type="number" min="0.1" max="100000" step="0.1" required /></Campo>

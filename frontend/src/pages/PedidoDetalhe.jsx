@@ -134,7 +134,6 @@ export default function PedidoDetalhe() {
       <Rastreamento id={p.id} key={p.status} />
       <PaineisSquads id={p.id} status={p.status} />
       <section className="acoes">
-        <Link className="botao" to={`/chamados/novo?pedido=${p.id}`}>Abrir chamado</Link>
         {p.status !== 'CANCELADO' && <Link className="botao" to={`/sinistros/novo?pedido=${p.id}`}>Registrar sinistro</Link>}
       </section>
       {equipe && PROXIMOS[p.status].length > 0 && (
