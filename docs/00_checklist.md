@@ -84,7 +84,9 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [x] Configuração de publicação: `render.yaml`, `Dockerfile` com `PORT`, `scripts/start.sh`, `frontend/public/_redirects` e guia `docs/18_publicacao.md`
 - [ ] 👤 Rodar `tests/e2e` contra o Supabase real (login real; cria dados fictícios) e confirmar que o 401 sumiu
 - [ ] 👤 Publicar a API no Render e o front no Cloudflare Pages (`docs/18_publicacao.md`) e testar a URL pública
-- [ ] 👤 Merge do PR #1 na `main` e entrega ao repositório do professor
+- [x] PR #1 mergeado na `main` (commit `600be1b`); CI e publicação da imagem no GHCR passaram
+- [x] Script de entrega `scripts/exportar_para_professor.sh` e guia `docs/19_entrega_professor.md` (fork + PR)
+- [ ] 👤 Entregar ao repositório do professor (fork, pasta do squad, Pull Request) — falta a URL e o padrão de pasta do professor
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)

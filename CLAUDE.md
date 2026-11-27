@@ -43,13 +43,13 @@ cd frontend && npm install && npm run dev
 - **Próximo passo** sai sempre do checklist: o executor lê `docs/00_checklist.md` e executa os itens marcados com 👤 que dependem da máquina local.
 
 ## Git
-Trabalho na branch `develop`; `main` recebe PR (PR #1 aberto). Mensagens de commit em português, no formato `tipo: resumo`.
+Trabalho na branch `develop`; `main` recebe PR (PR #1 já mergeado em 27/11; novas mudanças entram por novo PR). Mensagens de commit em português, no formato `tipo: resumo`.
 Não fazer push em `main`, merge, tag `v1.0.0` ou ações destrutivas sem confirmação do usuário.
 
 ## Estado atual (ver docs/00_checklist.md para o detalhe)
 Feito: docs de produto/DDD/ADRs, API UC01–UC10, Outbox + worker, Alembic, OTel, dashboard Grafana, script K6, ATAM, esqueleto do front, deck do Demoday, 47 testes (SQLite) e CI verde.
 Validado no Docker local (23/11): migrate, fluxo cliente→pedido, RN02/RN07 e publicação do Outbox. Corrigido `httpx` fora do requirements.txt (API caía na imagem).
-Supabase validado (23/11): JWKS ES256, migrate 0002, RLS em 9 tabelas, login real (cliente/atendente) e RN02. API com `GET /me` e listagens. Front completo em `frontend/` (React + Router, login Supabase), testado no navegador. Demoday: **30/11**. 54 testes. Publicação: `docs/18_publicacao.md` (Render + Cloudflare Pages + plano B com túnel). Teste E2E: `tests/e2e/`. JWT com tolerância de relógio de 30 s (`JWT_LEEWAY_SECONDS`).
+Supabase validado (23/11): JWKS ES256, migrate 0002, RLS em 9 tabelas, login real (cliente/atendente) e RN02. API com `GET /me` e listagens. Front completo em `frontend/` (React + Router, login Supabase), testado no navegador. Demoday: **30/11**. 54 testes. Publicação: `docs/18_publicacao.md` (Render + Cloudflare Pages + plano B com túnel). Teste E2E: `tests/e2e/`. Entrega ao professor: fork + PR (`docs/19_entrega_professor.md`). JWT com tolerância de relógio de 30 s (`JWT_LEEWAY_SECONDS`).
 Confirmado também (23/11): Jaeger com traces da API e Grafana com os painéis operacionais retornando dados.
 **Pendente / NÃO VERIFICADO:** painéis de tickets, sinistros e satisfação com dados (falta gerar tráfego) · entrega dos eventos em uma fila (só há publicação) · executar o K6 e preencher `docs/13_load_test.md` ·
 testes contra PostgreSQL/RabbitMQ reais · consumidores de eventos (Tracking, WMS, Financeiro — dependem dos contratos dos outros squads; formato do Tracking é SUPOSIÇÃO) ·
