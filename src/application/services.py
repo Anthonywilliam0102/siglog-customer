@@ -11,6 +11,7 @@ from src.domain import events, rules
 from src.domain.errors import Conflict, DomainError, Forbidden, NotFound
 from src.domain.rules import FeedbackTarget, PedidoStatus, Prioridade, Role, TicketStatus
 from src.infrastructure import models as m
+from src.infrastructure.clients import squads as clientes_squads
 from src.infrastructure.clients.tracking import fetch_tracking, mock_tracking
 from src.infrastructure.clients.url_segura import validar_base_url
 from src.infrastructure.segredos import cifrar, decifrar
@@ -333,3 +334,71 @@ def salvar_integracao(session: Session, actor: Actor, squad: str, base_url: str 
     session.add(cfg)
     session.flush()
     return _integracao_out(squad, cfg)
+
+
+FUNCAO_SQUAD = {
+    "wms": "Mostra no pedido o andamento da separação no centro de distribuição.",
+    "frota": "Sem integração direta prevista com o CRM.",
+    "tracking": "Mostra o rastreamento do pedido (posição e eventos de entrega).",
+    "financeiro": "Mostra no pedido a cobrança e o frete.",
+    "rh": "Sem integração direta prevista com o CRM.",
+}
+
+
+def status_integracoes(session: Session, actor: Actor) -> list[dict]:
+    """Visão para qualquer usuário logado: só o MODO de cada integração (nunca URL nem chave)."""
+    cfg = {c.squad: c for c in session.scalars(select(m.IntegrationSetting))}
+    saida = []
+    for sq, nome in SQUADS.items():
+        if sq in ("frota", "rh"):
+            modo = "nao_prevista"
+        elif cfg.get(sq) and cfg[sq].base_url:
+            modo = "configurada"
+        elif settings.tracking_mock:
+            modo = "simulada"
+        else:
+            modo = "nao_configurada"
+        saida.append({"squad": sq, "nome": nome, "funcao": FUNCAO_SQUAD[sq], "modo": modo})
+    return saida
+
+
+def paineis_do_pedido(session: Session, actor: Actor, order_id: uuid.UUID) -> list[dict]:
+    """Painéis do que os outros squads informam sobre este pedido (RN02: mesmo acesso do pedido)."""
+    o = consultar_pedido(session, actor, order_id)
+    paineis = []
+    for sq in clientes_squads.SQUADS_COM_PAINEL:
+        cfg = session.get(m.IntegrationSetting, sq)
+        if cfg and cfg.base_url:
+            chave = decifrar(cfg.api_key_enc) if cfg.api_key_enc else None
+            paineis.append(clientes_squads.fetch_painel(sq, str(o.id), cfg.base_url, {cfg.header_name: chave} if chave else None))
+        elif settings.tracking_mock:
+            paineis.append(clientes_squads.mock_painel(sq, o))
+        else:
+            paineis.append(clientes_squads.painel(sq, "nao_configurada", mensagem="Integração ainda não configurada."))
+    return paineis
+
+
+def testar_integracao(session: Session, actor: Actor, squad: str) -> dict:
+    """Chama a URL configurada (GET na raiz) com a chave e devolve o código HTTP e o tempo. Só equipe."""
+    import time
+
+    import httpx
+
+    _so_equipe(actor)
+    if squad not in SQUADS:
+        raise NotFound("Squad não encontrado")
+    cfg = session.get(m.IntegrationSetting, squad)
+    if not cfg or not cfg.base_url:
+        raise DomainError("Configure a URL antes de testar a conexão")
+    chave = decifrar(cfg.api_key_enc) if cfg.api_key_enc else None
+    t0 = time.perf_counter()
+
+    def ms() -> int:
+        return round((time.perf_counter() - t0) * 1000)
+
+    try:
+        r = httpx.get(cfg.base_url, timeout=4.0, headers={cfg.header_name: chave} if chave else {}, follow_redirects=False)
+        return {"ok": r.status_code < 500, "status_http": r.status_code, "ms": ms(), "erro": None}
+    except httpx.HTTPError:
+        return {"ok": False, "status_http": None, "ms": ms(),
+                "erro": "Não foi possível conectar ao endereço configurado."}

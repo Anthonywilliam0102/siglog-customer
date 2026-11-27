@@ -46,7 +46,11 @@ async function entrar(page, quem) {
   await page.waitForSelector(`.usuario .muted:has-text("${quem}")`, { timeout: 15000 });
   await page.waitForSelector('nav[aria-label="Principal"]');
 }
-const sair = async (page) => { await page.click('button.link'); await page.waitForURL('**/login'); };
+const sair = async (page) => {
+  await page.click('button.avatar');
+  await page.click('[role=menuitem]:has-text("Sair da conta")'); // fica no final do menu da conta
+  await page.waitForURL('**/login');
+};
 
 (async () => {
   const browser = await chromium.launch(process.env.E2E_CHANNEL ? { channel: process.env.E2E_CHANNEL } : {});
@@ -73,6 +77,23 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   }
   ok('cliente chega ao início', page.url() === `${BASE}/`, page.url());
   await shot(page, '01_home_cliente');
+  await page.click('button.avatar');
+  await page.waitForSelector('[role=menu]');
+  ok('menu da conta lista pedidos, chamados, sinistros, conta, integrações e Sair da conta', (await page.locator('[role=menuitem]').count()) === 6);
+  await shot(page, '01b_menu_usuario');
+  await page.keyboard.press('Escape');
+  ok('Esc fecha o menu do usuário', (await page.locator('[role=menu]').count()) === 0);
+  await page.click('button.avatar');
+  await page.click('[role=menuitem]:has-text("Minha conta")');
+  await page.waitForSelector('h1:has-text("Minha conta")');
+  ok('Minha conta mostra os dados do cadastro', (await page.textContent('main')).includes('Dados do cadastro'));
+  await page.click('button.avatar');
+  await page.click('[role=menuitem]:has-text("Integrações")');
+  await page.waitForSelector('h1:has-text("Integrações")');
+  await page.waitForSelector('.integracao');
+  ok('cliente vê os 5 squads na aba Integrações', (await page.locator('.integracao').count()) === 5);
+  ok('cliente não vê campos de URL nem de chave', (await page.locator('.integracao input').count()) === 0);
+  await page.click('nav >> text=Início');
 
   await page.click('text=Nova cotação >> nth=0');
   await page.fill('input[name=origem]', 'São Paulo/SP');
@@ -87,6 +108,8 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   await page.waitForURL(/\/pedidos\/[0-9a-f-]+$/);
   const pedidoUrl = page.url();
   await page.waitForSelector('text=Rastreamento');
+  await page.waitForSelector('text=Informações de outros squads', { timeout: 8000 }).catch(() => {});
+  ok('pedido mostra o painel dos outros squads (WMS e Financeiro)', (await page.locator('.painel-squad').count()) === 2);
   ok('pedido criado e detalhe aberto', (await page.textContent('h1')).startsWith('Pedido #'));
   ok('botão Voltar presente no detalhe', (await page.locator('button.voltar').count()) === 1);
   await shot(page, '03_pedido');
@@ -127,13 +150,18 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   const tabela = await page.textContent('table');
   ok('fila mostra o chamado do cliente', tabela.includes('Previsão de entrega (E2E)'), tabela.slice(0, 300));
   await shot(page, '04_fila');
-  await page.goto(`${BASE}/configuracoes`);
+  await page.click('button.avatar');
+  ok('menu da equipe não mostra o nome de um cliente', !(await page.textContent('.menu-cabeca')).includes('Loja'), await page.textContent('.menu-cabeca'));
+  ok('equipe vê Configurações no menu do usuário', (await page.locator('[role=menuitem]:has-text("Configurações")').count()) === 1);
+  await page.click('[role=menuitem]:has-text("Configurações")');
   await page.waitForSelector('h1:has-text("Configurações")');
-  ok('atendente vê as abas de configuração', (await page.locator('[role=tab]').count()) === 3);
-  await page.click('[role=tab]:has-text("Integrações")');
+  ok('atendente vê as abas de configuração', (await page.locator('[role=tab]').count()) === 2);
+  await page.click('button.avatar');
+  await page.click('[role=menuitem]:has-text("Integrações")');
+  await page.waitForSelector('h1:has-text("Integrações")');
   await page.waitForSelector('.integracao');
-  ok('cinco integrações listadas (um cartão por squad)', (await page.locator('.integracao').count()) === 5);
-  ok('chave de API é campo de senha (não aparece na tela)', (await page.locator('.integracao input[type=password]').count()) === 5);
+  ok('cinco squads listados (um cartão por squad)', (await page.locator('.integracao').count()) === 5);
+  ok('só WMS, Tracking e Financeiro têm chave de API (campo de senha)', (await page.locator('.integracao input[type=password]').count()) === 3);
   await shot(page, '04b_configuracoes');
   await page.goto(chamadoUrl);
   await page.fill('textarea[name=mensagem]', 'Previsão: 3 dias úteis.');

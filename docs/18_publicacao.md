@@ -25,7 +25,10 @@ Segredos só nos painéis (nunca no repositório). Todos os passos abaixo são f
 3. **Actions → "Publicar portal (GitHub Pages)" → Run workflow** (ou faça um push em `frontend/`). O endereço será `https://<usuario>.github.io/<repositorio>/` (aparece no fim do job).
 4. Se alguma das três variáveis faltar, o workflow publica o modo demonstração (e avisa no log); só com as três ele publica o sistema real.
 
-### 2B. Front no Cloudflare Pages (alternativa)
+### 2B. Front no Cloudflare Pages (endereço principal: `siglog-customer.pages.dev`)
+**Em uso desde 27/11**, ligado ao GitHub (cada merge na `main` republica). Configuração: *Workers & Pages → Create → Pages → Connect to Git* (use o link "Continue to Pages", pois o botão novo cria um Worker `workers.dev`); root `frontend`, build `npm ci && npm run build`, saída `dist`; variáveis `NODE_VERSION=22`, `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_AUTH_PROVIDERS`. No Supabase, adicione `https://siglog-customer.pages.dev/**` em *Redirect URLs*.
+
+Detalhes do modo manual (alternativa):
 1. Cloudflare → **Workers & Pages → Create → Pages → Connect to Git** → repositório → branch `main`.
 2. Configuração: **Root directory** `frontend` · **Build command** `npm run build` · **Build output** `dist`.
 3. Variáveis de ambiente (build): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (chave **publishable**, nunca a secret), `VITE_API_URL` = URL da API do passo 1 (sem barra no fim), `NODE_VERSION` = `22`.
@@ -67,6 +70,6 @@ Instalar o `cloudflared`: `winget install Cloudflare.cloudflared`. A URL muda a 
 | Item | Situação |
 |---|---|
 | `render.yaml`, `Dockerfile` (PORT), `start.sh`, `_redirects` | CONFIRMADO no código; a imagem sobe na porta de `PORT` (smoke test no CI) |
-| `pages.yml` (GitHub Pages) e o front sob subcaminho `/<repositorio>/` | build e roteamento testados localmente; **o deploy em si NÃO VERIFICADO** (precisa habilitar o Pages e criar as variáveis) |
-| API no Render, CORS e URL do Supabase | **NÃO VERIFICADO** (dependem da conta do time) |
+| `pages.yml` (GitHub Pages) e o front sob subcaminho `/<repositorio>/` | **CONFIRMADO em 27/11**: publicado em `https://anthonywilliam0102.github.io/siglog-customer/`, modo real |
+| API no Render, CORS e URL do Supabase | **CONFIRMADO em 27/11** (`/health`, `/docs`; site real fazendo login, cadastro e Configurações) |
 | Limites do plano gratuito do Render e do Pages | **NÃO VERIFICADO** (podem ter mudado; confira nos painéis) |

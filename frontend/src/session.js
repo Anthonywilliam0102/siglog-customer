@@ -28,6 +28,16 @@ export async function getToken() {
   return guardar.ler();
 }
 
+// Foto, nome e e-mail do login (Supabase). A foto só existe quando a pessoa entra por GitHub/Google.
+export async function dadosDoLogin() {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  const u = data.session?.user;
+  if (!u) return null;
+  const m = u.user_metadata ?? {};
+  return { email: u.email ?? null, nome: m.full_name || m.name || null, avatar: m.avatar_url || m.picture || null };
+}
+
 export async function entrar(email, senha) {
   if (!supabase) throw new Error('Supabase não configurado');
   const { error } = await supabase.auth.signInWithPassword({ email, password: senha });

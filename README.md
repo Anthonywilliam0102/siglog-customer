@@ -2,6 +2,15 @@
 
 Módulo da plataforma SIG-Log (Análise de Sistemas II). Porta de entrada da plataforma: cotação, pedidos, rastreamento, SAC, sinistros e avaliação.
 
+## Sistema no ar
+| O quê | Endereço |
+|---|---|
+| **Portal (principal)** | https://siglog-customer.pages.dev |
+| Portal (reserva, GitHub Pages) | https://anthonywilliam0102.github.io/siglog-customer/ |
+| API (Swagger) | https://siglog-customer-api.onrender.com/docs |
+
+Como testar: abra o portal e use **Criar conta** (pode ser um e-mail fictício; a senha precisa de 8 caracteres) ou **Entrar com GitHub**. A conta nova é de **cliente** e passa pelo cadastro. A API está no plano gratuito do Render: a **primeira** chamada depois de um tempo parado pode levar cerca de 1 minuto. Arquitetura: portal (Cloudflare Pages) → API (Render) → banco e login (Supabase).
+
 ## Rodar localmente
 ```bash
 cp .env.example .env

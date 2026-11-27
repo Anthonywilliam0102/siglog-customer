@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Financeiro — cobrança do pedido (PROPOSTA do Squad 06 — a confirmar com o squad)
+  version: 0.1.0
+  description: >
+    SUPOSIÇÃO do Squad 06: o que o CRM precisa consultar para mostrar no pedido. Quando o squad enviar o contrato oficial,
+    substitua este arquivo e ajuste src/infrastructure/clients/squads.py (a única camada que conhece o formato).
+    Autenticação: cabeçalho com chave de API (nome configurável em Integrações).
+paths:
+  /cobrancas/pedidos/{order_id}:
+    get:
+      summary: Situação do pedido neste squad
+      parameters:
+        - { name: order_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Situação atual
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [PENDENTE, PAGA, VENCIDA, ESTORNADA] }
+                  valor: { type: number }
+                  vencimento: { type: string }
+        "404": { description: Pedido desconhecido neste squad }

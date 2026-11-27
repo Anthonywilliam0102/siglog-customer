@@ -15,6 +15,8 @@ import Sinistros from './pages/Sinistros.jsx';
 import NovoSinistro from './pages/NovoSinistro.jsx';
 import Atendimento from './pages/Atendimento.jsx';
 import Configuracoes from './pages/Configuracoes.jsx';
+import Conta from './pages/Conta.jsx';
+import Integracoes from './pages/Integracoes.jsx';
 
 function Protegido() {
   const { carregando, perfil, equipe, cliente } = useAuth();
@@ -38,6 +40,8 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="cadastro" element={<Cadastro />} />
         <Route path="cotacao" element={<Cotacao />} />
+        <Route path="conta" element={<Conta />} />
+        <Route path="integracoes" element={<Integracoes />} />
         <Route path="pedidos" element={<Pedidos />} />
         <Route path="pedidos/:id" element={<PedidoDetalhe />} />
         <Route path="chamados" element={<Chamados />} />
