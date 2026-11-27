@@ -91,13 +91,20 @@ const sair = async (page) => {
   await page.click('[role=menuitem]:has-text("Integrações")');
   await page.waitForSelector('h1:has-text("Integrações")');
   await page.waitForSelector('.integracao');
-  ok('cliente vê os 5 squads na aba Integrações', (await page.locator('.integracao').count()) === 5);
+  ok('cliente vê uma aba por squad (5) em Integrações', (await page.locator('[role=tab]').count()) === 5);
   ok('cliente não vê campos de URL nem de chave', (await page.locator('.integracao input').count()) === 0);
   await page.click('nav >> text=Início');
 
   await page.click('text=Nova cotação >> nth=0');
-  await page.fill('input[name=origem]', 'São Paulo/SP');
-  await page.fill('input[name=destino]', 'Recife/PE');
+  await page.click('input[name=origem]');
+  await page.waitForSelector('[role=listbox] [role=option]');
+  ok('origem lista as capitais ao clicar', (await page.locator('[role=listbox] [role=option]').count()) === 27);
+  await page.click('[role=option]:has-text("São Paulo/SP")');
+  ok('escolher a capital preenche o campo', (await page.inputValue('input[name=origem]')) === 'São Paulo/SP');
+  await page.click('input[name=destino]');
+  await page.fill('input[name=destino]', 'reci');
+  ok('digitar filtra as capitais (sem acento)', (await page.locator('[role=listbox] [role=option]').count()) === 1);
+  await page.click('[role=option]:has-text("Recife/PE")');
   await page.fill('input[name=peso]', '120.5');
   await page.fill('input[name=volume]', '1.2');
   await page.click('button.primario');
@@ -114,13 +121,20 @@ const sair = async (page) => {
   ok('botão Voltar presente no detalhe', (await page.locator('button.voltar').count()) === 1);
   await shot(page, '03_pedido');
 
-  await page.click('text=Abrir chamado');
-  await page.fill('input[name=assunto]', 'Previsão de entrega (E2E)');
+  await page.click('.fab-chat');
+  await page.click('button:has-text("Atraso na entrega")');
+  await page.waitForSelector('.bolha.bot:has-text("está em")', { timeout: 8000 });
+  ok('assistente responde com os dados reais do pedido', (await page.textContent('.chat')).includes('Seu pedido #'));
+  await page.waitForSelector('button:has-text("Não, quero falar com a equipe")');
+  await shot(page, '03b_chat_assistente');
+  await page.click('button:has-text("Não, quero falar com a equipe")');
+  await page.waitForSelector('textarea[name=mensagem]');
   await page.fill('textarea[name=mensagem]', 'Qual a previsão de entrega?');
-  await page.selectOption('select[name=prioridade]', 'ALTA');
-  await page.click('button.primario');
+  await page.click('.compositor button.primario');
   await page.waitForURL(/\/chamados\/[0-9a-f-]+$/);
   const chamadoUrl = page.url();
+  await page.waitForSelector('.mensagem.sistema', { timeout: 8000 });
+  ok('chamado recebe a resposta automática (aguarde, nossa equipe vai falar com você)', (await page.textContent('.mensagem.sistema')).includes('Aguarde'));
   await page.waitForSelector('text=Vence em', { timeout: 8000 }).catch(() => {});
   ok('chamado criado com SLA visível', (await page.textContent('body')).includes('Vence em'));
 
@@ -148,7 +162,7 @@ const sair = async (page) => {
   await page.waitForSelector('h1:has-text("Fila de atendimento")');
   await page.waitForSelector('table');
   const tabela = await page.textContent('table');
-  ok('fila mostra o chamado do cliente', tabela.includes('Previsão de entrega (E2E)'), tabela.slice(0, 300));
+  ok('fila mostra o chamado do cliente', tabela.includes('Atraso na entrega'), tabela.slice(0, 300));
   await shot(page, '04_fila');
   await page.click('button.avatar');
   ok('menu da equipe não mostra o nome de um cliente', !(await page.textContent('.menu-cabeca')).includes('Loja'), await page.textContent('.menu-cabeca'));
@@ -160,8 +174,18 @@ const sair = async (page) => {
   await page.click('[role=menuitem]:has-text("Integrações")');
   await page.waitForSelector('h1:has-text("Integrações")');
   await page.waitForSelector('.integracao');
-  ok('cinco squads listados (um cartão por squad)', (await page.locator('.integracao').count()) === 5);
-  ok('só WMS, Tracking e Financeiro têm chave de API (campo de senha)', (await page.locator('.integracao input[type=password]').count()) === 3);
+  ok('equipe vê 5 abas de squads + Nossa API', (await page.locator('[role=tab]').count()) === 6);
+  for (const sq of ['WMS', 'Frota', 'Rastreamento', 'Financeiro', 'RH']) {
+    await page.click(`[role=tab]:has-text("${sq}")`);
+    ok(`aba ${sq} tem campo de chave de API (senha)`, (await page.locator('.integracao input[type=password]').count()) === 1);
+  }
+  await page.click('[role=tab]:has-text("Nossa API")');
+  await page.fill('input[name=nome]', 'Integração E2E do WMS');
+  await page.click('button:has-text("Gerar chave")');
+  await page.waitForSelector('.chave-nova');
+  ok('equipe gera chave de API para outro squad (sk_…)', (await page.textContent('.chave-nova')).startsWith('sk_'));
+  await page.waitForSelector('.lista-chaves li');
+  ok('chave emitida aparece na lista', (await page.locator('.lista-chaves li').count()) >= 1);
   await shot(page, '04b_configuracoes');
   await page.goto(chamadoUrl);
   await page.fill('textarea[name=mensagem]', 'Previsão: 3 dias úteis.');

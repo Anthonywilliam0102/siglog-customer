@@ -122,6 +122,9 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [x] Painéis de WMS e Financeiro no detalhe do pedido (via API configurável; simulados sem URL) e página **Integrações** no menu da conta, com Testar conexão (27/11; 87 testes; E2E demo 31/31 e real 30/30). Contratos de WMS/Financeiro são PROPOSTA, NÃO VERIFICADO com os squads
+- [x] Integrações com uma aba por squad (campo de chave de API em todas), aba **Nossa API** (chaves emitidas por nós, só leitura de pedidos, hash no banco, migração 0004) (27/11)
+- [x] **Fale conosco**: botão flutuante com headset, assistente automático (regras fixas, com dados reais do pedido) e chat do chamado com resposta automática de recebimento e atualização a cada 8 s
+- [x] Origem/destino com lista das 27 capitais (filtra ao digitar; aceita outra cidade)
 - [ ] Consumo de eventos (WMS e Financeiro) — depende dos contratos oficiais
 - [ ] Release Candidate (congelamento)
 - [ ] Release v1.0.0 (tag)

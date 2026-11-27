@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.api import schemas as s
-from src.api.auth import get_actor
+from src.api.auth import get_actor, get_actor_ou_chave
 from src.application import services as svc
 from src.application.services import Actor
 from src.domain.rules import PedidoStatus, TicketStatus
@@ -41,7 +41,7 @@ def list_customers(limit: int = Limit, offset: int = Offset, session: Session = 
 
 @router.get("/orders", response_model=list[s.OrderOut], tags=["pedidos"], summary="Listar pedidos", responses=ERR)
 def list_orders(status: PedidoStatus | None = None, customer_id: uuid.UUID | None = None, limit: int = Limit,
-                offset: int = Offset, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+                offset: int = Offset, session: Session = Depends(get_session), actor: Actor = Depends(get_actor_ou_chave)):
     return svc.listar_pedidos(session, actor, status, customer_id, limit, offset)
 
 
@@ -82,7 +82,7 @@ def post_order(body: s.OrderIn, session: Session = Depends(get_session), actor: 
 
 @router.get("/orders/{order_id}", response_model=s.OrderOut, tags=["pedidos"],
             summary="UC04 – Consultar pedido", responses=ERR)
-def get_order(order_id: uuid.UUID, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+def get_order(order_id: uuid.UUID, session: Session = Depends(get_session), actor: Actor = Depends(get_actor_ou_chave)):
     return svc.consultar_pedido(session, actor, order_id)
 
 
@@ -175,3 +175,23 @@ def get_order_squads(order_id: uuid.UUID, session: Session = Depends(get_session
              summary="Testar a conexão com a URL configurada (equipe)", responses=ERR)
 def post_integration_test(squad: str, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
     return svc.testar_integracao(session, actor, squad)
+
+
+@router.post("/settings/api-keys", response_model=s.ChaveApiCriadaOut, status_code=201, tags=["configurações"],
+             summary="Emitir chave de API para outro squad consultar pedidos (equipe)", responses=ERR)
+def post_api_key(body: s.ChaveApiIn, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    reg, chave = svc.criar_chave_api(session, actor, body.squad, body.nome)
+    commit(session, reg)
+    return {**s.ChaveApiOut.model_validate(reg).model_dump(), "chave": chave}
+
+
+@router.get("/settings/api-keys", response_model=list[s.ChaveApiOut], tags=["configurações"],
+            summary="Listar chaves emitidas (sem o valor)", responses=ERR)
+def list_api_keys(session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return svc.listar_chaves_api(session, actor)
+
+
+@router.delete("/settings/api-keys/{key_id}", response_model=s.ChaveApiOut, tags=["configurações"],
+               summary="Revogar chave emitida", responses=ERR)
+def delete_api_key(key_id: uuid.UUID, session: Session = Depends(get_session), actor: Actor = Depends(get_actor)):
+    return commit(session, svc.revogar_chave_api(session, actor, key_id))

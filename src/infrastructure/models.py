@@ -132,3 +132,18 @@ class IntegrationSetting(Base):
     api_key_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     updated_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+
+class ApiKey(Base):
+    """Chave de API EMITIDA POR NÓS para outro squad consultar o CRM (somente leitura de pedidos). Guarda só o hash."""
+
+    __tablename__ = "api_keys"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    squad: Mapped[str] = mapped_column(String(20))
+    nome: Mapped[str] = mapped_column(String(80))
+    prefixo: Mapped[str] = mapped_column(String(12))
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_by: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

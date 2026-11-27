@@ -178,7 +178,7 @@ class IntegracaoStatusOut(BaseModel):
     squad: str
     nome: str
     funcao: str
-    modo: str = Field(description="configurada | simulada | nao_configurada | nao_prevista")
+    modo: str = Field(description="configurada | simulada | nao_configurada")
 
 
 class DetalheOut(BaseModel):
@@ -200,3 +200,23 @@ class TesteIntegracaoOut(BaseModel):
     status_http: int | None
     ms: int
     erro: str | None
+
+
+class ChaveApiIn(BaseModel):
+    squad: str = Field(examples=["wms"])
+    nome: str = Field(min_length=3, max_length=80, examples=["Integração do WMS (produção)"])
+
+
+class ChaveApiOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    squad: str
+    nome: str
+    prefixo: str
+    created_at: datetime
+    revoked_at: datetime | None
+    last_used_at: datetime | None
+
+
+class ChaveApiCriadaOut(ChaveApiOut):
+    chave: str = Field(description="Aparece UMA única vez; guarde agora")

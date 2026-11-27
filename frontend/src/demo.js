@@ -68,15 +68,28 @@ export async function demoApi(caminho, { method = 'GET', body } = {}, token) {
   const NOMES = { wms: 'Squad 01 · WMS & Estoque', frota: 'Squad 02 · Frota & Roteirização', tracking: 'Squad 03 · Rastreamento', financeiro: 'Squad 04 · Financeiro', rh: 'Squad 05 · RH & Jornada' };
   const FUNCAO = {
     wms: 'Mostra no pedido o andamento da separação no centro de distribuição.',
-    frota: 'Sem integração direta prevista com o CRM.',
+    frota: 'Reservado: contrato ainda não definido com o Squad 02 (pode consumir o evento EntregaAvaliada).',
     tracking: 'Mostra o rastreamento do pedido (posição e eventos de entrega).',
     financeiro: 'Mostra no pedido a cobrança e o frete.',
-    rh: 'Sem integração direta prevista com o CRM.',
+    rh: 'Reservado: contrato ainda não definido com o Squad 05.',
   };
+
+  if (seg[0] === 'settings' && seg[1] === 'api-keys') {
+    if (!equipe) throw new ApiError('Apenas a equipe pode ver ou alterar as integrações', 403);
+    const ks = (e.chaves ??= []);
+    if (method === 'GET') return ks;
+    if (method === 'POST') {
+      if (!NOMES[body.squad]) nao('Squad');
+      const chave = `sk_${uid().replace(/-/g, '')}${uid().replace(/-/g, '').slice(0, 11)}`;
+      const k = { id: uid(), squad: body.squad, nome: body.nome, prefixo: chave.slice(0, 8), created_at: iso(Date.now()), revoked_at: null, last_used_at: null };
+      ks.unshift(k); salvar(e); return { ...k, chave };
+    }
+    const k = ks.find((x) => x.id === seg[2]); if (!k) nao('Chave'); k.revoked_at = iso(Date.now()); salvar(e); return k;
+  }
 
   if (seg[0] === 'integrations' && seg[1] === 'status') {
     return Object.keys(NOMES).map((sq) => ({ squad: sq, nome: NOMES[sq], funcao: FUNCAO[sq],
-      modo: ['frota', 'rh'].includes(sq) ? 'nao_prevista' : (e.integracoes ?? {})[sq]?.base_url ? 'configurada' : 'simulada' }));
+      modo: (e.integracoes ?? {})[sq]?.base_url ? 'configurada' : ['frota', 'rh'].includes(sq) ? 'nao_configurada' : 'simulada' }));
   }
 
   if (seg[0] === 'orders' && seg[2] === 'squads') {
@@ -174,7 +187,9 @@ export async function demoApi(caminho, { method = 'GET', body } = {}, token) {
       if (!meu(body.customer_id)) nega();
       const t = { id: uid(), customer_id: body.customer_id, order_id: body.order_id, categoria: body.categoria, prioridade: body.prioridade, assunto: body.assunto, status: 'ABERTO',
         sla_due_at: iso(Date.now() + SLA_H[body.prioridade] * H), created_at: iso(Date.now()),
-        mensagens: [{ id: uid(), author_role: papel, mensagem: body.mensagem, created_at: iso(Date.now()) }] };
+        mensagens: [{ id: uid(), author_role: papel, mensagem: body.mensagem, created_at: iso(Date.now()) },
+          { id: uid(), author_role: 'sistema', created_at: iso(Date.now() + 5),
+            mensagem: `Recebemos o seu chamado. Prioridade ${body.prioridade.toLowerCase()}: nossa equipe responde em até ${SLA_H[body.prioridade]} h. Aguarde, vamos falar com você por aqui. Pode enviar novas informações a qualquer momento.` }] };
       e.tickets.push(t); salvar(e); return semMsgs(t);
     }
     const t = e.tickets.find((x) => x.id === seg[1]); if (!t) nao('Ticket'); if (!meu(t.customer_id)) nega();

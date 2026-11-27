@@ -44,7 +44,8 @@ def test_fluxo_completo_e_eventos(client, cliente, atendente, session_factory):
     tid = t.json()["id"]
     assert client.post(f"/tickets/{tid}/messages", json={"mensagem": "Verificando"}, headers=atendente).status_code == 201
     detalhe = client.get(f"/tickets/{tid}", headers=cliente).json()
-    assert detalhe["status"] == "EM_ATENDIMENTO" and len(detalhe["messages"]) == 2
+    assert detalhe["status"] == "EM_ATENDIMENTO" and len(detalhe["messages"]) == 3
+    assert detalhe["messages"][1]["author_role"] == "sistema"
 
     sin = client.post("/claims", json={"order_id": oid, "tipo": "AVARIA", "descricao": "Caixa danificada",
                                        "valor_reclamado": "150.00"}, headers=cliente)

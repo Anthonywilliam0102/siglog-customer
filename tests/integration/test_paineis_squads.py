@@ -80,8 +80,8 @@ def test_status_das_integracoes_nao_expoe_url_nem_chave(client, cliente, atenden
     r = client.get("/integrations/status", headers=cliente)
     assert r.status_code == 200 and "wms.exemplo" not in r.text and "segredo-123" not in r.text
     modos = {x["squad"]: x["modo"] for x in r.json()}
-    assert modos == {"wms": "configurada", "frota": "nao_prevista", "tracking": "nao_configurada",
-                     "financeiro": "nao_configurada", "rh": "nao_prevista"}
+    assert modos == {"wms": "configurada", "frota": "nao_configurada", "tracking": "nao_configurada",
+                     "financeiro": "nao_configurada", "rh": "nao_configurada"}
 
 
 def test_testar_conexao(client, cliente, atendente, cfg, monkeypatch):

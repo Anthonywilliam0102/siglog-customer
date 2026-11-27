@@ -38,8 +38,7 @@ export default function Chamados() {
   const { dados, erro, carregando } = useCarga(() => api(`/tickets?limit=100${status ? `&status=${status}` : ''}`), [status]);
   return (
     <div className="pagina">
-      <Cabecalho titulo="Chamados" subtitulo={equipe ? 'Todos os chamados.' : 'Seus atendimentos com o SAC.'}
-        acao={<Link className="botao primario" to="/chamados/novo">Abrir chamado</Link>} />
+      <Cabecalho titulo="Chamados" subtitulo={equipe ? 'Todos os chamados.' : 'Seus atendimentos com o SAC.'} />
       <div className="filtros">
         <label>Status{' '}
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
