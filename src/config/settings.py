@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://siglog:siglog_dev@localhost:5432/siglog_customer"
     rabbitmq_url: str = "amqp://siglog:siglog_dev@localhost:5672/"
     jwt_secret: str = ""
+    jwt_leeway_seconds: int = 30  # tolerância de relógio (iat/exp); containers costumam ficar alguns segundos defasados
     supabase_url: str = ""  # ex.: https://<ref>.supabase.co (habilita tokens ES256/RS256 via JWKS)
     tracking_base_url: str = ""
     tracking_mock: bool = False  # demo: rastreamento simulado enquanto o contrato do Tracking não existe

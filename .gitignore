@@ -16,3 +16,6 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+tests/e2e/node_modules/
+tests/e2e/prints/

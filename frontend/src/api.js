@@ -16,15 +16,29 @@ function mensagem(data, status) {
   return `Erro ${status}`;
 }
 
-export async function api(path, { method = 'GET', body } = {}) {
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function enviar(path, method, body) {
   const token = await getToken();
-  const res = await fetch(`${BASE}${path}`, {
+  return fetch(`${BASE}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
+}
+
+export async function api(path, { method = 'GET', body } = {}) {
+  let res = await enviar(path, method, body);
+  // Um 401 logo após o login pode ser só defasagem de relógio: tenta de novo antes de encerrar a sessão.
+  if (res.status === 401) {
+    await esperar(1500);
+    res = await enviar(path, method, body);
+  }
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401) await sair();
+  if (res.status === 401) {
+    await sair();
+    sessionStorage.setItem('siglog_aviso', 'Sua sessão expirou. Entre novamente.');
+  }
   if (!res.ok) throw new ApiError(mensagem(data, res.status), res.status);
   return data;
 }

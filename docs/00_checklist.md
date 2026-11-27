@@ -40,7 +40,7 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Criar o usuário atendente de verdade no padrão da equipe (hoje é `atendimento@exemplo.com`, com perfil `atendente`)
 - [x] UC01–UC10 implementados (API + regras RN01–RN06)
 - [x] Publicação de eventos via Outbox + worker RabbitMQ (testado com publisher falso; 👤 validar com RabbitMQ real via Docker)
-- [x] Testes unitários, integração e contrato (50 testes, SQLite)
+- [x] Testes unitários, integração e contrato (54 testes, SQLite)
 - [ ] Testes de integração contra PostgreSQL e RabbitMQ reais (CI com services)
 - [x] Autenticação JWT + papéis (docs/11_security.md)
 - [ ] Consumidor de eventos do Tracking (status do pedido) — depende de contrato do outro squad
@@ -77,6 +77,14 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Validar o retry do worker numa subida a frio (`docker compose down && up`) e criar uma fila ligada ao exchange para provar a entrega dos eventos
 - [ ] Worker sem tracing: o trace não atravessa API → worker (propagar `traceparent` no evento) — melhoria, não bloqueia o Demoday
 - Nota: *Disponibilidade* usa `avg_over_time(up[5m])`; cai abaixo de 1 quando a API reinicia dentro da janela (ex.: rebuild)
+
+## Publicação e entrega (Demoday 30/11)
+- [x] Correção do 401 intermitente após o login: tolerância de relógio de 30 s no JWT (causa provável: `iat` no futuro por relógio do container), motivo da falha no log e nova tentativa no front antes de deslogar — 54 testes
+- [x] Teste ponta a ponta do portal em `tests/e2e/` (17 verificações; modo Supabase ou dev)
+- [x] Configuração de publicação: `render.yaml`, `Dockerfile` com `PORT`, `scripts/start.sh`, `frontend/public/_redirects` e guia `docs/18_publicacao.md`
+- [ ] 👤 Rodar `tests/e2e` contra o Supabase real (login real; cria dados fictícios) e confirmar que o 401 sumiu
+- [ ] 👤 Publicar a API no Render e o front no Cloudflare Pages (`docs/18_publicacao.md`) e testar a URL pública
+- [ ] 👤 Merge do PR #1 na `main` e entrega ao repositório do professor
 
 ## Fase 5 — Integração e Demoday (Encontros 15–16)
 - [ ] Integração com WMS e Financeiro (eventos consumidos)

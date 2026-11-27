@@ -24,7 +24,7 @@ def test_token_sem_exp_e_rejeitado(c):
 
 
 def test_token_expirado_e_rejeitado(c):
-    h = _h(sub="u", role="cliente", exp=int(time.time()) - 10)
+    h = _h(sub="u", role="cliente", exp=int(time.time()) - 120)
     assert c.get("/customers/00000000-0000-0000-0000-000000000000", headers=h).status_code == 401
 
 
@@ -101,4 +101,34 @@ def test_algoritmo_none_e_rejeitado(monkeypatch):
     token = jwt.encode({"sub": "u", "role": "gestor", "exp": int(time.time()) + 60}, None, algorithm="none")
     with pytest.raises(HTTPException) as e:
         _actor(token)
+    assert e.value.status_code == 401
+
+
+def test_tolerancia_de_relogio_aceita_iat_levemente_no_futuro(monkeypatch):
+    # Relógio do container atrasado: o token do Supabase parece emitido alguns segundos "no futuro".
+    monkeypatch.setattr(settings, "jwt_secret", SECRET)
+    agora = int(time.time())
+    assert _actor(_hs(sub="u1", role="cliente", iat=agora + 5)).sub == "u1"
+
+
+def test_iat_muito_no_futuro_continua_rejeitado(monkeypatch):
+    monkeypatch.setattr(settings, "jwt_secret", SECRET)
+    with pytest.raises(HTTPException) as e:
+        _actor(_hs(sub="u1", role="cliente", iat=int(time.time()) + 600))
+    assert e.value.status_code == 401
+
+
+def test_falha_de_autenticacao_registra_o_motivo_sem_o_token(monkeypatch, caplog):
+    monkeypatch.setattr(settings, "jwt_secret", SECRET)
+    token = _hs(sub="u1", role="cliente", exp=int(time.time()) - 600)
+    with caplog.at_level("WARNING"), pytest.raises(HTTPException):
+        _actor(token)
+    texto = " ".join(r.getMessage() for r in caplog.records)
+    assert "ExpiredSignatureError" in texto and token not in texto
+
+
+def test_hs256_sem_segredo_configurado_vira_401_e_nao_500(monkeypatch):
+    monkeypatch.setattr(settings, "jwt_secret", "")
+    with pytest.raises(HTTPException) as e:
+        _actor(_hs(sub="u", role="gestor"))
     assert e.value.status_code == 401

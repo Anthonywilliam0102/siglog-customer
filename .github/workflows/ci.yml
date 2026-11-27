@@ -43,6 +43,12 @@ jobs:
         # Pega o que os testes não pegam: módulo importado em produção mas ausente do requirements.txt.
         run: |
           docker run --rm siglog-customer:ci python -c "import src.api.main, src.infrastructure.outbox_publisher; print('imports ok')"
+      - name: Smoke test da imagem (sobe a API na porta definida por PORT)
+        run: |
+          docker run -d --name api-smoke -p 9000:9000 -e PORT=9000 siglog-customer:ci
+          for i in $(seq 1 20); do curl -fsS http://localhost:9000/health && break; sleep 2; done
+          curl -fsS http://localhost:9000/health || (docker logs api-smoke; exit 1)
+          docker rm -f api-smoke
       - name: Trivy scan (imagem)
         # Container oficial do Trivy (evita depender de versão/tag de action).
         # Troque --exit-code para 1 quando o time quiser bloquear o pipeline em CRITICAL/HIGH.

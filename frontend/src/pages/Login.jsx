@@ -6,7 +6,9 @@ import { entrar, entrarComTokenDev, temSupabase } from '../session.js';
 
 export default function Login() {
   const { perfil, carregando } = useAuth();
-  const [erro, setErro] = useState('');
+  const [erro, setErro] = useState(() => {
+    try { const a = sessionStorage.getItem('siglog_aviso'); sessionStorage.removeItem('siglog_aviso'); return a || ''; } catch { return ''; }
+  });
   const [enviando, setEnviando] = useState(false);
   if (!carregando && perfil) return <Navigate to="/" replace />;
 
