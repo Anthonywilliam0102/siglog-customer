@@ -20,6 +20,7 @@ from prometheus_client import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
+from src.api.carga import LimiteDeRequisicoes
 from src.api.routes import router
 from src.config.settings import settings
 from src.domain.errors import DomainError
@@ -102,10 +103,14 @@ async def metrics_middleware(request: Request, call_next):
 
 
 @app.get("/health", tags=["infra"])
-def health() -> dict:
+async def health() -> dict:  # async: não entra na fila de threads, segue respondendo sob carga
     return {"status": "ok", "service": settings.service_name}
 
 
 @app.get("/metrics", include_in_schema=False)
 def metrics() -> Response:
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+# Mais externo de todos: recusa o excesso antes de qualquer outro processamento.
+app.add_middleware(LimiteDeRequisicoes, maximo=settings.max_requisicoes_em_andamento)

@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     db_pool_size: int = 10
     db_max_overflow: int = 10
     db_pool_timeout: int = 5
+    # Máximo de requisições em andamento; acima disso responde 503 na hora (0 desliga). Ver src/api/carga.py
+    max_requisicoes_em_andamento: int = 64
     rabbitmq_url: str = "amqp://siglog:siglog_dev@localhost:5672/"
     jwt_secret: str = ""
     jwt_leeway_seconds: int = 30  # tolerância de relógio (iat/exp); containers costumam ficar alguns segundos defasados
