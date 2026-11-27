@@ -1,16 +1,20 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
 import { sair, temDemo } from '../session.js';
-import { Logo } from './Icons.jsx';
+import Icon, { Logo } from './Icons.jsx';
+import { useArrastar } from './Rolavel.jsx';
+import SeloEquipe from './SeloEquipe.jsx';
 
 export default function Layout() {
   const { perfil, equipe } = useAuth();
+  const navRef = useArrastar();
   const itens = [
-    ['/', 'Início'],
-    ...(equipe ? [['/atendimento', 'Atendimento']] : [['/cotacao', 'Nova cotação']]),
-    ['/pedidos', 'Pedidos'],
-    ['/chamados', 'Chamados'],
-    ['/sinistros', 'Sinistros'],
+    ['/', 'Início', 'home'],
+    ...(equipe ? [['/atendimento', 'Atendimento', 'shield']] : [['/cotacao', 'Nova cotação', 'calc']]),
+    ['/pedidos', 'Pedidos', 'box'],
+    ['/chamados', 'Chamados', 'chat'],
+    ['/sinistros', 'Sinistros', 'alert'],
+    ...(equipe ? [['/configuracoes', 'Configurações', 'sliders']] : []),
   ];
   return (
     <>
@@ -18,9 +22,9 @@ export default function Layout() {
       {temDemo && <div className="faixa-demo" role="note">Modo demonstração: os dados são fictícios e ficam só no seu navegador. Este não é o sistema em produção.</div>}
       <header className="topo">
         <Link to="/" className="marca" aria-label="SIG-Log Customer — início"><Logo /> <span>SIG-Log <b>Customer</b></span></Link>
-        <nav aria-label="Principal">
-          {itens.map(([to, nome]) => (
-            <NavLink key={to} to={to} end={to === '/'}>{nome}</NavLink>
+        <nav aria-label="Principal" ref={navRef}>
+          {itens.map(([to, nome, icone]) => (
+            <NavLink key={to} to={to} end={to === '/'}><Icon nome={icone} tamanho={17} /><span>{nome}</span></NavLink>
           ))}
         </nav>
         <div className="usuario">
@@ -29,6 +33,7 @@ export default function Layout() {
         </div>
       </header>
       <main id="conteudo"><Outlet /></main>
+      <footer className="rodape"><SeloEquipe /></footer>
     </>
   );
 }

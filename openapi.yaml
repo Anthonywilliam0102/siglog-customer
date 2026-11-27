@@ -682,6 +682,70 @@ paths:
           description: Já avaliado
       security:
       - HTTPBearer: []
+  /settings/integrations:
+    get:
+      tags:
+      - configurações
+      summary: Integrações com outros squads (equipe)
+      operationId: list_integrations_settings_integrations_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IntegracaoOut'
+                type: array
+                title: Response List Integrations Settings Integrations Get
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+      security:
+      - HTTPBearer: []
+  /settings/integrations/{squad}:
+    put:
+      tags:
+      - configurações
+      summary: Salvar URL e chave de API de um squad (equipe)
+      operationId: put_integration_settings_integrations__squad__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: squad
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Squad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegracaoIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegracaoOut'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Não encontrado
+        '422':
+          description: Regra de negócio/validação
+        '409':
+          description: SETTINGS_ENCRYPTION_KEY não configurada no servidor
   /health:
     get:
       tags:
@@ -937,6 +1001,80 @@ components:
       - ENTREGA
       - ATENDIMENTO
       title: FeedbackTarget
+    IntegracaoIn:
+      properties:
+        base_url:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+          title: Base Url
+          description: https://... (vazio remove)
+          examples:
+          - https://tracking.exemplo.com
+        header_name:
+          anyOf:
+          - type: string
+            pattern: ^[A-Za-z0-9-]{1,64}$
+          - type: 'null'
+          title: Header Name
+          examples:
+          - X-API-Key
+        api_key:
+          anyOf:
+          - type: string
+            maxLength: 512
+            minLength: 8
+          - type: 'null'
+          title: Api Key
+          description: Guardada cifrada; não é devolvida
+        limpar_chave:
+          type: boolean
+          title: Limpar Chave
+          default: false
+      type: object
+      title: IntegracaoIn
+    IntegracaoOut:
+      properties:
+        squad:
+          type: string
+          title: Squad
+        nome:
+          type: string
+          title: Nome
+        base_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Base Url
+        header_name:
+          type: string
+          title: Header Name
+        tem_chave:
+          type: boolean
+          title: Tem Chave
+          description: Indica se há chave guardada. O valor NUNCA é devolvido.
+        atualizado_em:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Atualizado Em
+        atualizado_por:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por
+      type: object
+      required:
+      - squad
+      - nome
+      - base_url
+      - header_name
+      - tem_chave
+      - atualizado_em
+      - atualizado_por
+      title: IntegracaoOut
     MeOut:
       properties:
         sub:

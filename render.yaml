@@ -18,5 +18,7 @@ services:
       - key: TRACKING_MOCK
         value: "true"
       - key: RUN_MIGRATIONS
-        value: "false"           # o banco já está migrado; "true" aplica o Alembic ao subir
+        value: "true"            # aplica o Alembic (idempotente) a cada subida: cria as tabelas novas no Supabase sozinho
+      # Opcional (adicione na aba Environment do serviço): SETTINGS_ENCRYPTION_KEY = chave Fernet, para a tela de Configurações guardar
+      # chaves de API dos outros squads. Gere com: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
       # Não defina JWT_SECRET: sem ele, tokens de desenvolvimento (HS256) são recusados e só valem os do Supabase.

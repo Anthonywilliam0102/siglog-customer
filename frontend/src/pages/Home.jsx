@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { TabelaWrap } from '../components/Rolavel.jsx';
 import { Alerta, Carregando, SeloPedido, Vazio } from '../components/ui.jsx';
 import Icon from '../components/Icons.jsx';
 import RouteArt from '../components/RouteArt.jsx';
@@ -85,7 +86,7 @@ export default function Home() {
         {pedidos.carregando ? <Carregando /> : !lista.length ? (
           <Vazio icone="box">{equipe ? 'Nenhum pedido ainda.' : <>Você ainda não tem pedidos. <Link to="/cotacao">Faça sua primeira cotação</Link>.</>}</Vazio>
         ) : (
-          <div className="tabela-wrap">
+          <TabelaWrap>
             <table>
               <thead><tr><th>Pedido</th><th>Rota</th><th>Status</th><th>Valor</th><th>Criado em</th></tr></thead>
               <tbody>
@@ -100,7 +101,7 @@ export default function Home() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TabelaWrap>
         )}
       </section>
     </div>

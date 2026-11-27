@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
+import Confirmar from '../components/Confirmar.jsx';
+import { useToast } from '../components/Toast.jsx';
+import Voltar from '../components/Voltar.jsx';
 import { Alerta, Cabecalho, Carregando, Estrelas, SeloPedido } from '../components/ui.jsx';
 import { useAuth } from '../auth.jsx';
 import { useCarga } from '../hooks.js';
@@ -42,6 +45,7 @@ function Rastreamento({ id }) {
 }
 
 function Avaliar({ pedido }) {
+  const toast = useToast();
   const [nota, setNota] = useState(0);
   const [feito, setFeito] = useState(false);
   const [erro, setErro] = useState('');
@@ -51,6 +55,7 @@ function Avaliar({ pedido }) {
     try {
       await api('/feedback', { method: 'POST', body: { target: 'ENTREGA', nota, order_id: pedido.id, comentario: new FormData(e.target).get('comentario') || null } });
       setFeito(true);
+      toast.ok('Avaliação registrada. Obrigado!');
     } catch (err) {
       if (err.status === 409) setFeito(true);
       else setErro(err.message);
@@ -76,14 +81,18 @@ export default function PedidoDetalhe() {
   const { equipe } = useAuth();
   const { dados: p, erro, carregando, recarregar } = useCarga(() => api(`/orders/${id}`), [id]);
   const [msg, setMsg] = useState('');
+  const [cancelando, setCancelando] = useState(false);
+  const toast = useToast();
 
   async function mudar(status) {
     setMsg('');
     try {
       await api(`/orders/${id}/status`, { method: 'PATCH', body: { status } });
+      toast.ok(status === 'CANCELADO' ? 'Pedido cancelado.' : `Status atualizado: ${STATUS_PEDIDO[status].label}.`);
       recarregar();
     } catch (err) {
       setMsg(err.message);
+      toast.erro(err.message);
     }
   }
 
@@ -92,6 +101,7 @@ export default function PedidoDetalhe() {
 
   return (
     <div className="pagina">
+      <Voltar para="/pedidos" />
       <Cabecalho titulo={`Pedido #${curto(p.id)}`} subtitulo={`${p.origem} → ${p.destino} · ${brl(p.valor_estimado)} · criado em ${dataHora(p.created_at)}`}
         acao={<SeloPedido status={p.status} />} />
       <section className="cartao"><Linha status={p.status} /></section>
@@ -105,7 +115,7 @@ export default function PedidoDetalhe() {
           <h2>Atualizar status (equipe)</h2>
           <div className="acoes">
             {PROXIMOS[p.status].map((s) => (
-              <button key={s} className={s === 'CANCELADO' ? 'perigo' : 'primario'} onClick={() => mudar(s)}>
+              <button key={s} className={s === 'CANCELADO' ? 'perigo' : 'primario'} onClick={() => (s === 'CANCELADO' ? setCancelando(true) : mudar(s))}>
                 {s === 'CANCELADO' ? 'Cancelar pedido' : `Marcar como ${STATUS_PEDIDO[s].label.toLowerCase()}`}
               </button>
             ))}
@@ -114,6 +124,8 @@ export default function PedidoDetalhe() {
         </section>
       )}
       {!equipe && p.status === 'ENTREGUE' && <Avaliar pedido={p} />}
+      <Confirmar aberto={cancelando} titulo="Cancelar este pedido?" texto="O cancelamento não pode ser desfeito e o pedido deixa de aceitar novas movimentações." rotulo="Cancelar pedido" perigo
+        onCancelar={() => setCancelando(false)} onConfirmar={() => { setCancelando(false); mudar('CANCELADO'); }} />
     </div>
   );
 }

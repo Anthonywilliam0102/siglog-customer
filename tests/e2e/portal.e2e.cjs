@@ -88,6 +88,7 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   const pedidoUrl = page.url();
   await page.waitForSelector('text=Rastreamento');
   ok('pedido criado e detalhe aberto', (await page.textContent('h1')).startsWith('Pedido #'));
+  ok('botão Voltar presente no detalhe', (await page.locator('button.voltar').count()) === 1);
   await shot(page, '03_pedido');
 
   await page.click('text=Abrir chamado');
@@ -112,6 +113,9 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   await page.goto(`${BASE}/atendimento`);
   await page.waitForURL(`${BASE}/`, { timeout: 5000 }).catch(() => {});
   ok('cliente não acessa /atendimento (RN02 na tela)', page.url() === `${BASE}/`, page.url());
+  await page.goto(`${BASE}/configuracoes`);
+  await page.waitForURL(`${BASE}/`, { timeout: 5000 }).catch(() => {});
+  ok('cliente não acessa /configuracoes', page.url() === `${BASE}/`, page.url());
   await sair(page);
 
   // ---- atendente ----
@@ -123,6 +127,14 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   const tabela = await page.textContent('table');
   ok('fila mostra o chamado do cliente', tabela.includes('Previsão de entrega (E2E)'), tabela.slice(0, 300));
   await shot(page, '04_fila');
+  await page.goto(`${BASE}/configuracoes`);
+  await page.waitForSelector('h1:has-text("Configurações")');
+  ok('atendente vê as abas de configuração', (await page.locator('[role=tab]').count()) === 3);
+  await page.click('[role=tab]:has-text("Integrações")');
+  await page.waitForSelector('.integracao');
+  ok('cinco integrações listadas (um cartão por squad)', (await page.locator('.integracao').count()) === 5);
+  ok('chave de API é campo de senha (não aparece na tela)', (await page.locator('.integracao input[type=password]').count()) === 5);
+  await shot(page, '04b_configuracoes');
   await page.goto(chamadoUrl);
   await page.fill('textarea[name=mensagem]', 'Previsão: 3 dias úteis.');
   await page.click('text=Enviar resposta');
@@ -155,6 +167,23 @@ const sair = async (page) => { await page.click('button.link'); await page.waitF
   await page.waitForSelector('text=Obrigado pela avaliação');
   ok('avaliação do atendimento', true);
 
+  if (MODE === 'demo') {
+    const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const p2 = await ctx2.newPage();
+    await p2.goto(`${BASE}/login`);
+    await p2.click('[role=tab]:has-text("Criar conta")');
+    await p2.click('button:has-text("Criar conta de demonstração")');
+    await p2.waitForURL('**/cadastro', { timeout: 8000 }).catch(() => {});
+    ok('conta nova cai no cadastro (como num sistema comum)', p2.url().endsWith('/cadastro'), p2.url());
+    await p2.fill('input[name=nome]', 'Maria Professora');
+    await p2.check('input[type=radio] >> nth=0');
+    await p2.fill('input[name=documento]', '529.982.247-25');
+    await p2.fill('input[name=email]', 'professora@exemplo.com');
+    await p2.click('button.primario');
+    await p2.waitForSelector('h1:has-text("Olá, Maria")', { timeout: 8000 }).catch(() => {});
+    ok('após o cadastro a conta nova vê o próprio painel vazio', (await p2.textContent('h1')).includes('Olá, Maria') && (await p2.textContent('body')).includes('Você ainda não tem pedidos'));
+    await ctx2.close();
+  }
   ok('sem erros de página nem HTTP 5xx', erros.length === 0, erros.join(' | '));
   await browser.close();
   for (const [s, n, e] of resultados) console.log(s, n, e ? `(${e})` : '');

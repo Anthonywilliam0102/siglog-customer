@@ -47,6 +47,7 @@ jobs:
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
           VITE_DEMO: ${{ steps.modo.outputs.demo }}
+          VITE_AUTH_PROVIDERS: ${{ vars.VITE_AUTH_PROVIDERS }}   # opcional: google,github (só mostra os botões dos provedores ativados no Supabase)
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}

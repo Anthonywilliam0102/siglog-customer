@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
+import { useToast } from '../components/Toast.jsx';
+import Voltar from '../components/Voltar.jsx';
 import { Alerta, Cabecalho, Campo } from '../components/ui.jsx';
 import SeletorCliente, { useClienteId } from '../components/SeletorCliente.jsx';
 import { useCarga } from '../hooks.js';
@@ -8,6 +10,7 @@ import { CATEGORIAS, curto, PRIORIDADES } from '../lib.js';
 
 export default function NovoChamado() {
   const nav = useNavigate();
+  const toast = useToast();
   const [params] = useSearchParams();
   const [escolhido, setEscolhido] = useState('');
   const clienteId = useClienteId(escolhido);
@@ -26,6 +29,7 @@ export default function NovoChamado() {
         method: 'POST',
         body: { customer_id: clienteId, order_id: pedido || null, categoria: f.categoria, prioridade: f.prioridade, assunto: f.assunto, mensagem: f.mensagem },
       });
+      toast.ok('Chamado aberto. Você será atendido dentro do prazo (SLA).');
       nav(`/chamados/${t.id}`);
     } catch (err) {
       setErro(err.message);
@@ -35,6 +39,7 @@ export default function NovoChamado() {
 
   return (
     <div className="pagina estreita">
+      <Voltar para="/chamados" />
       <Cabecalho titulo="Abrir chamado" subtitulo="Conte o que aconteceu. Respondemos dentro do prazo da prioridade escolhida." />
       <form className="cartao" onSubmit={enviar}>
         <SeletorCliente valor={escolhido} onChange={setEscolhido} />

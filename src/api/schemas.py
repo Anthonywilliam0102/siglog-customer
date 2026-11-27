@@ -155,3 +155,20 @@ class FeedbackOut(Out):
 class MeOut(BaseModel):
     sub: str
     role: str
+
+
+class IntegracaoOut(BaseModel):
+    squad: str
+    nome: str
+    base_url: str | None
+    header_name: str
+    tem_chave: bool = Field(description="Indica se há chave guardada. O valor NUNCA é devolvido.")
+    atualizado_em: datetime | None
+    atualizado_por: str | None
+
+
+class IntegracaoIn(BaseModel):
+    base_url: str | None = Field(None, max_length=300, description="https://... (vazio remove)", examples=["https://tracking.exemplo.com"])
+    header_name: str | None = Field(None, pattern=r"^[A-Za-z0-9-]{1,64}$", examples=["X-API-Key"])
+    api_key: str | None = Field(None, min_length=8, max_length=512, description="Guardada cifrada; não é devolvida")
+    limpar_chave: bool = False

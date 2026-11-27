@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
+import { useToast } from '../components/Toast.jsx';
+import Voltar from '../components/Voltar.jsx';
 import { Alerta, Campo, Cabecalho } from '../components/ui.jsx';
 import SeletorCliente, { useClienteId } from '../components/SeletorCliente.jsx';
 import { brl, dataHora } from '../lib.js';
 
 export default function Cotacao() {
   const nav = useNavigate();
+  const toast = useToast();
   const [escolhido, setEscolhido] = useState('');
   const clienteId = useClienteId(escolhido);
   const [cotacao, setCotacao] = useState(null);
@@ -35,6 +38,7 @@ export default function Cotacao() {
     setOcupado(true);
     try {
       const pedido = await api('/orders', { method: 'POST', body: { quote_id: cotacao.id } });
+      toast.ok('Pedido criado com sucesso.');
       nav(`/pedidos/${pedido.id}`);
     } catch (err) {
       setErro(err.message);
@@ -44,6 +48,7 @@ export default function Cotacao() {
 
   return (
     <div className="pagina estreita">
+      <Voltar para="/" />
       <Cabecalho titulo="Nova cotação" subtitulo="Informe a rota e a carga para ver o valor estimado." />
       {!cotacao ? (
         <form className="cartao" onSubmit={cotar}>

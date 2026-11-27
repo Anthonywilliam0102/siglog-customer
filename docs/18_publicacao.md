@@ -13,7 +13,8 @@ Segredos só nos painéis (nunca no repositório). Todos os passos abaixo são f
 3. **Não** crie `JWT_SECRET` na nuvem: sem ele, tokens de desenvolvimento (HS256) são recusados e só valem os do Supabase.
 4. Quando subir, abra `https://<api>.onrender.com/health`: deve responder `{"status":"ok",...}`. Anote essa URL.
 - O plano gratuito **hiberna após inatividade**: a primeira chamada pode levar cerca de 1 minuto. **Abra o `/health` alguns minutos antes de apresentar.**
-- O banco já está migrado (Alembic 0002). Se criar um banco novo, defina `RUN_MIGRATIONS=true` uma vez.
+- `RUN_MIGRATIONS=true` (padrão do `render.yaml`): a API aplica o Alembic ao subir (idempotente); é assim que a tabela de integrações (migração 0003) chega ao Supabase.
+- Opcional: na aba **Environment** do serviço, `SETTINGS_ENCRYPTION_KEY` (chave Fernet) permite à tela de Configurações guardar chaves de API dos outros squads. Sem ela, só a URL pode ser salva.
 - Não há RabbitMQ nem worker na nuvem: os eventos ficam no Outbox (tabela `outbox_events`). O fluxo do portal funciona normalmente; a publicação no RabbitMQ é mostrada na demo local.
 
 ### 2A. Front no GitHub Pages (recomendado: sem conta nova, publica sozinho a cada push na `main`)

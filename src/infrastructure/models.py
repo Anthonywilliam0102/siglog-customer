@@ -120,3 +120,15 @@ class OutboxEvent(Base):
     payload: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = _now()
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+
+
+class IntegrationSetting(Base):
+    """Configuração de integração com outro squad (URL base e chave de API cifrada). Uma linha por squad."""
+
+    __tablename__ = "integration_settings"
+    squad: Mapped[str] = mapped_column(String(20), primary_key=True)
+    base_url: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    header_name: Mapped[str] = mapped_column(String(64), default="X-API-Key")
+    api_key_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_by: Mapped[str | None] = mapped_column(String(128), nullable=True)

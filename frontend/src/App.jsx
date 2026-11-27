@@ -14,6 +14,7 @@ import ChamadoDetalhe from './pages/ChamadoDetalhe.jsx';
 import Sinistros from './pages/Sinistros.jsx';
 import NovoSinistro from './pages/NovoSinistro.jsx';
 import Atendimento from './pages/Atendimento.jsx';
+import Configuracoes from './pages/Configuracoes.jsx';
 
 function Protegido() {
   const { carregando, perfil, equipe, cliente } = useAuth();
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="sinistros" element={<Sinistros />} />
         <Route path="sinistros/novo" element={<NovoSinistro />} />
         <Route path="atendimento" element={<SoEquipe><Atendimento /></SoEquipe>} />
+        <Route path="configuracoes" element={<SoEquipe><Configuracoes /></SoEquipe>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

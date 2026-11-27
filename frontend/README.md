@@ -13,6 +13,8 @@ React 18 + Vite + React Router. Login pelo **Supabase Auth**; todos os dados vê
 | `/chamados`, `/chamados/novo`, `/chamados/:id` | todos | SAC: abrir, conversar, SLA, avaliar atendimento |
 | `/sinistros`, `/sinistros/novo` | todos | registrar e acompanhar sinistros |
 | `/atendimento` | equipe | fila de chamados por prazo de SLA |
+| `/configuracoes` | equipe | trocar a URL da API (só neste navegador), cadastrar URL e chave de API dos outros squads (chave cifrada no servidor) e informações do sistema |
+| `/login` (aba *Criar conta*) | todos | cria conta no Supabase (perfil cliente) e leva ao cadastro |
 
 O perfil (cliente, atendente, gestor) vem do token; o front só esconde opções, **a API é quem autoriza** (RN02).
 
@@ -25,6 +27,7 @@ cd frontend
 cp .env.example .env.local     # preencha VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY
 npm install && npm run dev     # http://localhost:5173 (proxy /api -> http://localhost:8000)
 ```
+`VITE_AUTH_PROVIDERS` (opcional): `google`, `github` ou `google,github` mostra os botões de login social (cada provedor precisa estar ligado no Supabase; ver `docs/15_supabase.md`, seção 4.2). Não há botão da Apple.
 Sem as variáveis do Supabase, o login pede um **token de desenvolvimento** (`python scripts/gen_token.py <sub> cliente`).
 Use apenas a chave **publishable**; nunca a `secret`/`service_role`.
 
