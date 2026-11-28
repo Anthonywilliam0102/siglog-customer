@@ -22,6 +22,7 @@ from prometheus_client import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
+from src.api.cabecalhos import CabecalhosDeSeguranca
 from src.api.carga import LimiteDeCorpo, LimiteDeRequisicoes
 from src.api.routes import router
 from src.config.settings import settings
@@ -127,3 +128,4 @@ def metrics(request: Request) -> Response:
 # Mais externo de todos: recusa o excesso antes de qualquer outro processamento.
 app.add_middleware(LimiteDeRequisicoes, maximo=settings.max_requisicoes_em_andamento)
 app.add_middleware(LimiteDeCorpo, maximo=settings.max_corpo_bytes)
+app.add_middleware(CabecalhosDeSeguranca)  # mais externo: vale também para as respostas 503/413 dos limitadores

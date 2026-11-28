@@ -21,12 +21,16 @@ Autenticação (JWT), autorização (RN02, IDOR, escalada), validação de entra
 | CORS não reflete origem não autorizada | 1 | **CONFIRMADO** |
 | Dependências Python (`pip-audit`) | todas | **CONFIRMADO** sem vulnerabilidade conhecida |
 
+## VALIDAÇÃO NA PRODUÇÃO (27/11, Claude do VS Code, `scripts/seguranca_producao.py`)
+**47 OK · 0 FALHA · 0 puladas**, sem alterar nenhum dado (leitura antes e depois idêntica). Cobriu rotas sem login, JWT forjado, `/metrics`, CORS, limites de tamanho, entradas inválidas (inclusive `Infinity`), perfil cliente tentando ações de equipe, SSRF e cabeçalhos do portal. Observação que gerou a correção 6 abaixo: nem a API nem o portal enviavam `Strict-Transport-Security`. Registro completo em `docs/validacao_local.md` (rodada 10).
+
 ## ACHADOS E CORREÇÕES
 1. **ALTO — Erro 500 com `Infinity`/`NaN` no JSON.** O FastAPI devolvia o valor enviado na resposta 422 e não conseguia serializá-lo, virando 500 (e ecoando a entrada do usuário). *Correção:* handler de `RequestValidationError` que devolve só `loc`, `msg` e `type` (`src/api/main.py`).
 2. **MÉDIO — Textos sem limite de tamanho** (mensagem de chamado, descrição de sinistro, comentário): aceitou 200 KB. *Correção:* `max_length` (5000/5000/2000) e limite de corpo da requisição de 256 KB com 413 (`MAX_CORPO_BYTES`, `src/api/carga.py`).
 3. **MÉDIO — SSRF: porta arbitrária** (`https://host-publico:22` era aceito). *Correção:* só portas 443 e 8443 (`src/infrastructure/clients/url_segura.py`).
 4. **MÉDIO — `/metrics` público** na API publicada (expõe rotas e contagens). *Correção:* `METRICS_TOKEN` exige `Authorization: Bearer` quando definido; o `render.yaml` gera o valor no Render. Local/Prometheus do Compose seguem sem token.
 5. **BAIXO — Front sem cabeçalhos de segurança.** *Correção:* `frontend/public/_headers` (CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`), valido com o navegador sem violações. Vale para o Cloudflare Pages; o GitHub Pages não aplica `_headers`.
+6. **BAIXO — Sem HSTS.** *Correção:* `Strict-Transport-Security` no portal (`_headers`) e na API (middleware `src/api/cabecalhos.py`, só em requisições HTTPS), além de `X-Content-Type-Options`, `X-Frame-Options` e `Referrer-Policy` nas respostas da API.
 
 ## RISCOS ACEITOS / PENDENTES
 - **`react-router` (2 avisos moderados no `npm audit`):** redirecionamento aberto com barra invertida em `<Link>`/`navigate` e injeção na hidratação SSR. **Não explorável aqui:** todos os destinos de navegação são fixos ou internos e o front não usa SSR. A correção exige a versão 7 (mudança grande): **fazer depois do Demoday**.
