@@ -211,3 +211,13 @@ def test_metrics_nao_deve_ser_publico_quando_ha_token(client, monkeypatch):
 def test_cors_nao_reflete_origem_nao_autorizada(client, monkeypatch):
     r = client.get("/health", headers={"Origin": "https://site-malicioso.example"})
     assert r.headers.get("access-control-allow-origin") in (None, "")
+
+
+def test_cabecalhos_de_seguranca_na_api(client):
+    r = client.get("/health")
+    assert r.headers["x-content-type-options"] == "nosniff" and r.headers["x-frame-options"] == "DENY"
+    assert "strict-transport-security" not in r.headers  # HTTP local: sem HSTS
+    r = client.get("/health", headers={"X-Forwarded-Proto": "https"})  # como atrás do proxy do Render
+    assert "max-age=31536000" in r.headers["strict-transport-security"]
+    r = client.get("/orders")  # também nas respostas de erro
+    assert r.status_code == 401 and r.headers["x-content-type-options"] == "nosniff"

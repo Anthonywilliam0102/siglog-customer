@@ -68,6 +68,9 @@ def anonimo():
     # acorda a API (plano free hiberna)
     r = req("GET", "/health")
     ok("API no ar (/health 200)", r.status_code == 200, str(r.status_code))
+    hh = {k.lower(): v for k, v in r.headers.items()}
+    ok("API: Strict-Transport-Security presente", "max-age" in hh.get("strict-transport-security", ""), hh.get("strict-transport-security", "ausente"))
+    ok("API: X-Content-Type-Options nosniff", hh.get("x-content-type-options") == "nosniff", hh.get("x-content-type-options", "ausente"))
     for rota in ("/orders", "/customers", "/tickets", "/claims", "/me", "/settings/integrations", "/settings/api-keys"):
         ok(f"sem token: GET {rota} -> 401", req("GET", rota).status_code == 401)
     ok("sem token: /metrics recusado (401/403)", req("GET", "/metrics").status_code in (401, 403),
@@ -97,7 +100,7 @@ def front():
     ok("front: X-Content-Type-Options nosniff", h.get("x-content-type-options") == "nosniff", h.get("x-content-type-options", "ausente"))
     ok("front: X-Frame-Options DENY", h.get("x-frame-options", "").upper() == "DENY", h.get("x-frame-options", "ausente"))
     ok("front: Content-Security-Policy presente", "default-src" in h.get("content-security-policy", ""), "ausente")
-    ok("front: HTTPS com HSTS (ou redirecionamento seguro)", WEB.startswith("https://"))
+    ok("front: Strict-Transport-Security presente", "max-age" in h.get("strict-transport-security", ""), h.get("strict-transport-security", "ausente"))
 
 
 def autenticado(tok_cli, tok_at):
