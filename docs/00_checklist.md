@@ -129,6 +129,7 @@ Legenda: [x] feito · [ ] pendente · 👤 depende de uma pessoa do squad · �
 - [ ] 👤 Pendências da validação: painel de pedidos no Grafana (não existe), E2E no Supabase (decisão do usuário), compose puro apontando para o Supabase por causa do `.env` local
 - [x] **Release v1.0.0 publicada (28/11)** no GitHub, apontando para `5cf7ab0` (merge do PR #6, o que está Live no Render)
 - [x] **Rodada de segurança (28/11):** 44 testes novos (`tests/security/`), 4 achados corrigidos (500 com Infinity, textos sem limite, porta no SSRF, `/metrics` público) + cabeçalhos do front; relatório em `docs/21_seguranca.md`. Pendente depois do Demoday: `react-router` v7, desligar cadastro aberto, SonarCloud
+- [x] **Segurança validada na produção (28/11):** `scripts/seguranca_producao.py` com 49 OK e 0 falhas depois do PR #9 (HSTS na API e no portal); dados idênticos antes e depois
 - [ ] Consumo de eventos (WMS e Financeiro) — depende dos contratos oficiais
 - [ ] Release Candidate (congelamento)
 - [ ] Release v1.0.0 (tag)

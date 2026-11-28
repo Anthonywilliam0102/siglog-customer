@@ -22,7 +22,7 @@ Autenticação (JWT), autorização (RN02, IDOR, escalada), validação de entra
 | Dependências Python (`pip-audit`) | todas | **CONFIRMADO** sem vulnerabilidade conhecida |
 
 ## VALIDAÇÃO NA PRODUÇÃO (27/11, Claude do VS Code, `scripts/seguranca_producao.py`)
-**47 OK · 0 FALHA · 0 puladas**, sem alterar nenhum dado (leitura antes e depois idêntica). Cobriu rotas sem login, JWT forjado, `/metrics`, CORS, limites de tamanho, entradas inválidas (inclusive `Infinity`), perfil cliente tentando ações de equipe, SSRF e cabeçalhos do portal. Observação que gerou a correção 6 abaixo: nem a API nem o portal enviavam `Strict-Transport-Security`. Registro completo em `docs/validacao_local.md` (rodada 10).
+**47 OK · 0 FALHA · 0 puladas** (e **49 OK · 0 FALHA** depois da correção do HSTS, PR #9), sem alterar nenhum dado (leitura antes e depois idêntica). Cobriu rotas sem login, JWT forjado, `/metrics`, CORS, limites de tamanho, entradas inválidas (inclusive `Infinity`), perfil cliente tentando ações de equipe, SSRF e cabeçalhos do portal. Observação que gerou a correção 6 abaixo: nem a API nem o portal enviavam `Strict-Transport-Security`. Registro completo em `docs/validacao_local.md` (rodada 10).
 
 ## ACHADOS E CORREÇÕES
 1. **ALTO — Erro 500 com `Infinity`/`NaN` no JSON.** O FastAPI devolvia o valor enviado na resposta 422 e não conseguia serializá-lo, virando 500 (e ecoando a entrada do usuário). *Correção:* handler de `RequestValidationError` que devolve só `loc`, `msg` e `type` (`src/api/main.py`).
