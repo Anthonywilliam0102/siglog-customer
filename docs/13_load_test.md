@@ -29,18 +29,19 @@ Ambiente: Docker local (API com 1 processo uvicorn, PostgreSQL em container, K6 
 
 | Cenário | Média | p95 | p99 | Throughput | Erros | Thresholds |
 |---|---|---|---|---|---|---|
-| **Normal (100 req/s)** | 113 ms | **285 ms** | 370 ms | 99,9 req/s | **0,00%** (6001 requisições) | passaram os três |
+| **Normal (100 req/s)**, antes do limitador | 113 ms | **285 ms** | 370 ms | 99,9 req/s | **0,00%** (6001 requisições) | passaram os três |
+| **Normal (100 req/s)**, com o limitador (`0340860`) | 99 ms | **415 ms** | 611 ms | 100,0 req/s | **0,19%** (12 respostas 503, todas no mesmo segundo) | passaram os três |
 | Pico (500 req/s), 1 processo | – | 1,08 s (todas) | 1,51 s | 496,7 req/s oferecidos; ~47 req/s atendidos | 90,5% (todos 503 rápidos) | falharam |
 | Pico (500 req/s), 4 processos | – | 1,39 s (todas) | 1,85 s | 491,2 req/s oferecidos; ~210 req/s atendidos | 57,7% (todos 503 rápidos) | falharam |
 | Extremo (1000 req/s) | – | – | – | – | – | não executado |
 
 ### O que a medição mostrou
-1. **Capacidade confortável: 100 req/s** (p95 285 ms, sem erros). É o que o sistema atende dentro dos critérios com 1 processo.
+1. **Capacidade confortável: 100 req/s** (p95 de 285 a 415 ms, erros entre 0% e 0,19%). É o que o sistema atende dentro dos critérios com 1 processo. Na medição com o limitador houve 12 respostas 503 num único segundo (um pico de latência de ~0,9 s encheu as 64 vagas); não investigamos a causa do pico.
 2. **Acima disso o sistema recusa, não trava.** Antes das correções, o pico esgotava o pool de conexões (5+10, espera de 30 s) e a API ficava sem resposta por vários minutos (até reinício manual). Correções: pool configurável com espera de 5 s e 503 + `Retry-After` (`77771e5`); limite de requisições em andamento (64) que recusa o excesso na entrada, e `/health` assíncrono (`0340860`).
 3. **Depois das correções:** as 503 saem em cerca de 60 ms (antes, mediana de 36 s), o `/health` segue respondendo e a API volta ao normal **imediatamente** após a carga (antes, 105 a 120 s).
 4. **Mais processos ajudam:** com `WEB_CONCURRENCY=4` a capacidade atendida passou de ~47 para ~210 req/s no mesmo hardware.
 
 ### Limitações (declare na apresentação)
 - **Os thresholds do pico não foram atingidos:** o sistema degrada com elegância, mas não sustenta 500 req/s com p95 < 500 ms.
-- **NÃO VERIFICADO:** o cenário normal depois do limitador (`0340860`); repetição das execuções (a variação entre rodadas foi grande no início); o ambiente publicado (Render free, 1 vCPU compartilhada, hiberna); o limite de conexões do Supabase com vários processos (cada processo tem o próprio pool); métricas do Prometheus são por processo quando `WEB_CONCURRENCY > 1`.
+- **NÃO VERIFICADO:** repetição das execuções (o normal com o limitador foi medido uma vez) (a variação entre rodadas foi grande no início); o ambiente publicado (Render free, 1 vCPU compartilhada, hiberna); o limite de conexões do Supabase com vários processos (cada processo tem o próprio pool); métricas do Prometheus são por processo quando `WEB_CONCURRENCY > 1`.
 - K6 e API dividiram a mesma máquina, então os números refletem esse hardware, não produção.
