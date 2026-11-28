@@ -17,6 +17,8 @@ services:
         sync: false
       - key: TRACKING_MOCK
         value: "true"
+      - key: METRICS_TOKEN       # /metrics exige este token na nuvem (valor gerado pelo Render; Prometheus local não usa)
+        generateValue: true
       - key: RUN_MIGRATIONS
         value: "true"            # aplica o Alembic (idempotente) a cada subida: cria as tabelas novas no Supabase sozinho
       # Opcional (adicione na aba Environment do serviço): SETTINGS_ENCRYPTION_KEY = chave Fernet, para a tela de Configurações guardar

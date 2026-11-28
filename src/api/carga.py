@@ -27,3 +27,21 @@ class LimiteDeRequisicoes:
             return await self.app(scope, receive, send)
         finally:
             self.em_andamento -= 1
+
+
+class LimiteDeCorpo:
+    """Recusa com 413 requisições cujo Content-Length passa do máximo (evita corpos gigantes). 0 desliga."""
+
+    def __init__(self, app, maximo: int):
+        self.app = app
+        self.maximo = maximo
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and self.maximo > 0:
+            for nome, valor in scope.get("headers", []):
+                if nome == b"content-length" and valor.isdigit() and int(valor) > self.maximo:
+                    corpo = json.dumps({"detail": "Corpo da requisição grande demais"}).encode()
+                    await send({"type": "http.response.start", "status": 413, "headers": [
+                        (b"content-type", b"application/json"), (b"content-length", str(len(corpo)).encode())]})
+                    return await send({"type": "http.response.body", "body": corpo})
+        return await self.app(scope, receive, send)

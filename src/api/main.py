@@ -2,11 +2,13 @@
 
 Fase 0: apenas health check e métricas. Endpoints de negócio (A.6) vêm nas próximas fases.
 """
+import hmac
 import json
 import logging
 import time
 
 from fastapi import FastAPI, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import (
@@ -20,7 +22,7 @@ from prometheus_client import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
-from src.api.carga import LimiteDeRequisicoes
+from src.api.carga import LimiteDeCorpo, LimiteDeRequisicoes
 from src.api.routes import router
 from src.config.settings import settings
 from src.domain.errors import DomainError
@@ -66,6 +68,13 @@ async def pool_timeout_handler(request: Request, exc: PoolTimeoutError):
                         headers={"Retry-After": "2"})
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_handler(request: Request, exc: RequestValidationError):
+    # Não devolve o valor enviado (`input`): evita erro 500 com Infinity/NaN e eco de dados do usuário na resposta.
+    erros = [{"loc": list(e.get("loc", [])), "msg": e.get("msg", "inválido"), "type": e.get("type", "")} for e in exc.errors()]
+    return JSONResponse({"detail": erros}, status_code=422)
+
+
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(request: Request, exc: IntegrityError):
     log_event("integrity_error", level="WARNING", path=request.url.path)
@@ -108,9 +117,13 @@ async def health() -> dict:  # async: não entra na fila de threads, segue respo
 
 
 @app.get("/metrics", include_in_schema=False)
-def metrics() -> Response:
+def metrics(request: Request) -> Response:
+    esperado = f"Bearer {settings.metrics_token}"
+    if settings.metrics_token and not hmac.compare_digest(request.headers.get("authorization", ""), esperado):
+        return JSONResponse({"detail": "Não autorizado"}, status_code=401)
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # Mais externo de todos: recusa o excesso antes de qualquer outro processamento.
 app.add_middleware(LimiteDeRequisicoes, maximo=settings.max_requisicoes_em_andamento)
+app.add_middleware(LimiteDeCorpo, maximo=settings.max_corpo_bytes)

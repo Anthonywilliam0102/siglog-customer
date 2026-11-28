@@ -14,3 +14,5 @@ ignore = ["B008"]  # padrão Depends() do FastAPI
 "scripts/seed_demo.py" = ["E501"]  # linhas de dados de demonstração
 "src/domain/event_contracts.py" = ["E501"]  # tabelas de schemas e exemplos
 "tests/contract/test_contratos_publicados.py" = ["E501"]
+"scripts/seguranca_producao.py" = ["E501"]
+"tests/security/test_seguranca.py" = ["E501"]  # linhas de payloads de ataque

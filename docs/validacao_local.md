@@ -221,3 +221,26 @@ API local com o pool padrão (10+10) e **banco local**. Tarefas 7 e 8 da rodada 
 - **NÃO VERIFICADO:** cenário normal depois deste commit; repetição das execuções; ambiente publicado; limite de conexões do Supabase com vários processos (cada um tem o próprio pool).
 
 Estado ao final: API local com 1 processo e banco local.
+
+## 2026-11-27 — Rodada 9: K6 normal após o limitador e portal publicado (código `3b84fdf`)
+
+### Pré-requisitos — CONFIRMADO
+`origin/main` contém o `0340860` (merge `5cf7ab0`, PR #6). `ruff check .` limpo; `pytest`: **94 passed**.
+
+### K6 normal (100 req/s, 60 s, uma execução)
+API no banco local (`DATABASE_URL` host `postgres:5432`, credenciais omitidas), 1 processo, pool 10+10, limite de 64 em andamento.
+
+| req/s | requisições | média | p95 | p99 | % erro | 503 | thresholds |
+|---|---|---|---|---|---|---|---|
+| 99,99 | 6001 | 99 ms | 415 ms | 611 ms | 0,19% | **12** | passaram os três |
+
+- Thresholds: **CONFIRMADO** (p95 < 500 ms, p99 < 1 s, falhas < 1%).
+- Zero respostas 503: **FALHOU.** As 12 saíram todas no mesmo segundo (24º da carga), junto com um pico de latência (atendidas nesse segundo: até 873 ms); p50 delas 25 ms. `db_pool_exhausted` 0, `traceback` 0: a origem é o limitador de 64 em andamento (inferido; ele não registra log). Causa do pico de latência não investigada.
+- `/health` 58/58 e leitura autenticada 54/54 com 200; container sem reinício.
+- Para o `docs/13_load_test.md`: o "normal sem erros" ali é de antes do limitador; depois dele há esta medição (0,19%).
+
+### Portal publicado (`https://siglog-customer.pages.dev`), conta de equipe, só leitura — CONFIRMADO
+Chrome automatizado, com escritas na API bloqueadas (nenhuma foi tentada); sem erros de página; chamadas à API todas 200. Sem faixa de modo demonstração.
+- `/pedidos`: 12 · `/chamados`: 8 · `/atendimento`: 3 não resolvidos (1 com SLA vencido) · `/sinistros`: 7.
+- Para o Demoday: há registros de teste visíveis ("(E2E)", "(roteiro de validação)") misturados aos de demonstração; pelos prazos mostrados, os 3 chamados em aberto estarão com SLA vencido em 30/11.
+- Prints conferidos: fila de atendimento e sinistros (guardados fora do repositório).

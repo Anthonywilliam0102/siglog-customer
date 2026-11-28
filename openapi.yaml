@@ -1075,6 +1075,7 @@ components:
           - AVARIA
         descricao:
           type: string
+          maxLength: 5000
           minLength: 3
           title: Descricao
         valor_reclamado:
@@ -1249,6 +1250,7 @@ components:
         comentario:
           anyOf:
           - type: string
+            maxLength: 2000
           - type: 'null'
           title: Comentario
         order_id:
@@ -1424,6 +1426,7 @@ components:
       properties:
         mensagem:
           type: string
+          maxLength: 5000
           minLength: 1
           title: Mensagem
       type: object
@@ -1742,6 +1745,7 @@ components:
           title: Assunto
         mensagem:
           type: string
+          maxLength: 5000
           minLength: 1
           title: Mensagem
       type: object
