@@ -83,11 +83,11 @@ class TicketIn(BaseModel):
     categoria: str = Field(min_length=2, max_length=50, examples=["ATRASO"])
     prioridade: Prioridade = Prioridade.MEDIA
     assunto: str = Field(min_length=3, max_length=200)
-    mensagem: str = Field(min_length=1)
+    mensagem: str = Field(min_length=1, max_length=5000)
 
 
 class MessageIn(BaseModel):
-    mensagem: str = Field(min_length=1)
+    mensagem: str = Field(min_length=1, max_length=5000)
 
 
 class MessageOut(Out):
@@ -120,7 +120,7 @@ class TicketStatusIn(BaseModel):
 class ClaimIn(BaseModel):
     order_id: uuid.UUID
     tipo: str = Field(min_length=2, max_length=30, examples=["AVARIA"])
-    descricao: str = Field(min_length=3)
+    descricao: str = Field(min_length=3, max_length=5000)
     valor_reclamado: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
 
 
@@ -138,7 +138,7 @@ class ClaimOut(Out):
 class FeedbackIn(BaseModel):
     target: FeedbackTarget
     nota: int = Field(ge=1, le=5)
-    comentario: str | None = None
+    comentario: str | None = Field(None, max_length=2000)
     order_id: uuid.UUID | None = None
     ticket_id: uuid.UUID | None = None
 

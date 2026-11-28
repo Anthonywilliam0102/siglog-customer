@@ -23,6 +23,8 @@ def validar_base_url(url: str, resolve=resolver) -> str:
         raise DomainError("Use uma URL completa começando com https://")
     if p.username or p.password or p.query or p.fragment:
         raise DomainError("A URL não pode ter usuário, senha, parâmetros ou fragmento")
+    if p.port not in (None, 443, 8443):
+        raise DomainError("Porta não permitida (use 443 ou 8443)")
     try:
         ips = [p.hostname] if _eh_ip(p.hostname) else resolve(p.hostname, p.port or 443)
     except OSError as exc:
