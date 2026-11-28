@@ -244,3 +244,70 @@ Chrome automatizado, com escritas na API bloqueadas (nenhuma foi tentada); sem e
 - `/pedidos`: 12 · `/chamados`: 8 · `/atendimento`: 3 não resolvidos (1 com SLA vencido) · `/sinistros`: 7.
 - Para o Demoday: há registros de teste visíveis ("(E2E)", "(roteiro de validação)") misturados aos de demonstração; pelos prazos mostrados, os 3 chamados em aberto estarão com SLA vencido em 30/11.
 - Prints conferidos: fila de atendimento e sinistros (guardados fora do repositório).
+
+## 2026-11-27 — Rodada 10: teste de segurança seguro em PRODUÇÃO (`scripts/seguranca_producao.py`, código `20aa0ac`)
+
+Alvos: API `https://siglog-customer-api.onrender.com` e portal `https://siglog-customer.pages.dev`. Credenciais lidas de `.env`/`.env.validacao`, nada exibido (a chave usada é a pública do Supabase). `origin/main` em `d02f4a5` (merge do PR #7).
+
+### Deploy — CONFIRMADO por comportamento (o hash no Render não foi conferido)
+O `/openapi.json` publicado é igual ao gerado pelo código local; `/metrics` sem token é recusado; os limites novos respondem.
+
+### Resultado — CONFIRMADO: 47 OK · 0 FALHA · 0 PULOU (exit 0)
+```
+OK    API no ar (/health 200)
+OK    sem token: GET /orders -> 401
+OK    sem token: GET /customers -> 401
+OK    sem token: GET /tickets -> 401
+OK    sem token: GET /claims -> 401
+OK    sem token: GET /me -> 401
+OK    sem token: GET /settings/integrations -> 401
+OK    sem token: GET /settings/api-keys -> 401
+OK    sem token: /metrics recusado (401/403)
+OK    JWT HS256 forjado com segredo 'secret…' recusado
+OK    JWT HS256 forjado com segredo 'change…' recusado
+OK    JWT HS256 forjado com segredo 'siglog…' recusado
+OK    JWT HS256 forjado com segredo 'jwt-se…' recusado
+OK    JWT HS256 forjado com segredo 'dev-se…' recusado
+OK    JWT alg=none recusado
+OK    chave de API inventada recusada
+OK    erro sem vazamento de detalhes internos
+OK    CORS não reflete origem não autorizada
+OK    corpo de 300 KB recusado antes da autenticação (413) ou 401
+OK    front no ar
+OK    front: X-Content-Type-Options nosniff
+OK    front: X-Frame-Options DENY
+OK    front: Content-Security-Policy presente
+OK    front: HTTPS com HSTS (ou redirecionamento seguro)
+OK    cliente: GET /settings/integrations -> 403
+OK    cliente: GET /settings/api-keys -> 403
+OK    cliente: POST /settings/integrations/wms/test -> 403
+OK    cliente não consegue emitir chave de API (403)
+OK    cliente não altera status de pedido (403/404)
+OK    status das integrações sem URL nem chave
+OK    pedido inexistente/alheio: 403/404, nunca 500
+OK    cotação inválida (peso negativo) -> 422
+OK    cotação inválida (origem gigante) -> 422
+OK    cotação inválida (peso texto) -> 422
+OK    cotação inválida (uuid inválido) -> 422
+OK    JSON com Infinity -> 422 (nunca 500)
+OK    mensagem de 6000 caracteres -> 422
+OK    corpo de 300 KB -> 413
+OK    SSRF recusado: http://169.254.169.254/latest/meta-data
+OK    SSRF recusado: https://127.0.0.1
+OK    SSRF recusado: https://10.0.0.5
+OK    SSRF recusado: https://localhost
+OK    SSRF recusado: https://exemplo.com:22
+OK    SSRF recusado: file:///etc/passwd
+OK    SSRF recusado: https://user:pw@exemplo.com
+OK    injeção no nome do cabeçalho recusada
+OK    URL da Frota intacta depois dos testes de SSRF
+47 OK · 0 FALHA · 0 puladas
+```
+
+### O teste alterou algo? Não — CONFIRMADO
+Leitura antes e depois (clientes 1, pedidos 12, chamados 8, sinistros 7, integrações 5, chaves de API 1): conteúdo idêntico (hash por rota).
+
+### Observações
+- A verificação "front: HTTPS com HSTS" do script só testa se `WEB_URL` começa com `https://`; não olha o cabeçalho. Conferido à parte: nem o portal nem o `/health` da API enviam `Strict-Transport-Security`; o portal redireciona HTTP para HTTPS (301). (O domínio `.dev` é HSTS pré-carregado nos navegadores; para `onrender.com` isso não foi verificado.)
+- Há **1 chave de API ativa em produção**: squad `wms`, "Integração teste", criada em 2026-11-27 03:27 UTC, nunca usada. Não foi criada por este teste; confirmar com a equipe se deve ser revogada.
+- **NÃO VERIFICADO:** teste autenticado com um segundo cliente (isolamento entre clientes), limite de tentativas de login e comportamento sob carga em produção — fora do escopo do script.
